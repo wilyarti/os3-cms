@@ -11,35 +11,64 @@ import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import FeatherIcon from 'feather-icons-react';
+import {Editor} from '@tinymce/tinymce-react';
 import {Settings, BarChart2, Info, Sliders, TrendingUp, TrendingDown, Activity} from 'react-feather';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            getPageListIsLoading: false,
-            getPostListIsLoading: false,
-            selectedIcon: "camera",
+            postIsLoading: false,
+            pageIsLoading: false,
+            selectedPageIcon: "camera",
+            selectedPostIcon: "camera",
             pageList: [],
-            postList: []
+            postList: [],
+            pageID: '',
+            postContents: '',
+            pageName: "Please enter a name...",
+            postName: "Please enter a name..."
         };
         this.addPage = this.addPage.bind(this);
+        this.addPost = this.addPost.bind(this);
         this.createPage = this.createPage.bind(this);
-        this.getPageList = this.getPageList.bind(this);
-        this.getPostList = this.getPostList.bind(this);
-        this.selectIcon = this.selectIcon.bind(this);
+        this.selectPageIcon = this.selectPageIcon.bind(this);
+        this.selectPostIcon = this.selectPostIcon.bind(this);
+        this.handlePageNameChange = this.handlePageNameChange.bind(this);
+        this.handlePostNameChange = this.handlePostNameChange.bind(this);
+        this.handlePageID = this.handlePageID.bind(this);
+        this.handleEditorChange = this.handleEditorChange.bind(this);
+        this.loadData = this.loadData.bind(this)
     }
 
-    selectIcon(icon) {
-        this.setState({selectedIcon: icon.target.value})
+    handleEditorChange(content, editor) {
+        this.setState({postContents: content})
     }
+    handlePageNameChange(e) {
+        this.setState({pageName: e.target.value})
+    }
+    handlePostNameChange(e) {
+        this.setState({postName: e.target.value})
+    }
+    handlePageID(e) {
+        console.log(e.target.value);
+        this.setState({pageID: e.target.value});
+    }
+    selectPageIcon(icon) {
+        this.setState({selectedPageIcon: icon.target.value})
+    }
+
+    selectPostIcon(icon) {
+        this.setState({selectedPostIcon: icon.target.value})
+    }
+
     createPage() {
 
     }
 
-    getPageList() {
-        this.setState({getPageListIsLoading: true});
-        fetch("/api/getPages").then(response => response.json())
+    loadData() {
+        this.setState({pageIsLoading: true});
+        fetch("/api/getAllPostsAndPages").then(response => response.json())
             .then((data) => {
                 console.log(data)
                 this.setState({pageList: data})
@@ -48,45 +77,74 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({getPageListIsLoading: false})
-            })
-    }
-
-    getPostList() {
-        this.setState({getPostListIsLoading: true});
-        fetch("/api/getPosts").then(response => response.json())
-            .then((data) => {
-                console.log(data)
-                this.setState({postList: data})
-            })
-            .catch((error) => {
-                alert(`${error} retrieving posts failed.`)
-            })
-            .finally((data) => {
-                this.setState({getPostListIsLoading: false})
+                this.setState({pageIsLoading: false, pageID: this.state.pageList[0].id})
             })
     }
 
     addPage() {
+        this.setState({pageIsLoading: true});
+        var data = {
+            name: this.state.pageName,
+            icon: this.state.selectedPageIcon,
+            createdTime: new Date()
+        };
+        fetch("/api/addPage",
+            {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then((data) => {
+                if (data.success !== true) {
+                    alert("Unable to add page." + data.errorMessage)
+                }
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                this.setState({pageIsLoading: false})
+            })
+    }
 
+    addPost() {
+        this.setState({postIsLoading: true});
+        var data = {
+            name: this.state.postName,
+            pageID: this.state.pageID,
+            icon: this.state.selectedPostIcon,
+            createdTime: new Date(),
+            contents: this.state.postContents
+        };
+        fetch("/api/addPost",
+            {
+                method: 'POST', // or 'PUT'
+                body: JSON.stringify(data), // data can be `string` or {object}!
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then((data) => {
+                if (data.success !== true) {
+                    alert("Unable to add post." + data.errorMessage)
+                }
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                this.setState({postIsLoading: false})
+            })
     }
 
     render() {
         const ourPages = this.state.pageList;
         const ourPosts = this.state.postList;
-        const pageListTable = ourPages.map((_, index) => {
+        const pageListDropDownMenu = ourPages.map((_, index) => {
             return (
-                <Row key={index}>
-                    <Col>
-                        {this.state.pageList[index].id}
-                    </Col>
-                    <Col>
-                        <FeatherIcon icon={this.state.pageList[index].icon}/>
-                    </Col>
-                    <Col>
-                        {this.state.pageList[index].name}
-                    </Col>
-                </Row>
+                <option value={this.state.pageList[index].id}>[{this.state.pageList[index].id}]{this.state.pageList[index].name}</option>
             )
         });
         const postListTable = ourPosts.map((_, index) => {
@@ -115,90 +173,23 @@ class App extends Component {
                 <Row>
                     <Col m={6}>
                         <Card>
-                            <Card.Header>CRUD Operations on Pages</Card.Header>
-                            <Card.Body>
-                                <Card.Title></Card.Title>
-                                <Card.Text>
-                                </Card.Text>
-                                <Row>
-                                    <Col>
-                                        ID </Col>
-                                    <Col>
-                                        ICON </Col>
-                                    <Col>
-                                        NAME </Col>
-                                </Row>
-                                {pageListTable}
-                                <br/>
-                                <Button variant={'primary'}
-                                        disabled={(this.state.getPageListIsLoading)}
-                                        onClick={!(this.state.getPageListIsLoading) ? this.getPageList : null}>
-                                    {(this.state.getPageListIsLoading) ? <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    /> : ''}
-                                    {'Get Page List'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col m={6}>
-                        <Card>
-                            <Card.Header>CRUD Operations on Posts</Card.Header>
-                            <Card.Body>
-                                <Card.Title></Card.Title>
-                                <Card.Text>
-                                </Card.Text>
-                                <Row>
-                                    <Col>
-                                        ID </Col>
-                                    <Col>
-                                        PAGEID </Col>
-                                    <Col>
-                                        NAME </Col>
-                                </Row>
-                                {postListTable}
-                                <br/>
-                                <Button variant={'primary'}
-                                        disabled={(this.state.getPostListIsLoading)}
-                                        onClick={!(this.state.getPostListIsLoading) ? this.getPostList : null}>
-                                    {(this.state.getPostListIsLoading) ? <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    /> : ''}
-                                    {'Get Page List'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                </Row>
-                <br/>
-                    <Row>
-                    <Col m={6}>
-                        <Card>
-                            <Card.Header>CRUD Operations on Pages</Card.Header>
+                            <Card.Header>Create/Edit Page</Card.Header>
                             <Card.Body>
                                 <Card.Text>
                                 </Card.Text>
                                 <Form>
-                                    <Form.Group controlId="postForm.Name">
-                                        <Form.Label>Page Name</Form.Label>
-                                        <Form.Control type="name" placeholder="Example page name...."/>
+                                    <Form.Group controlId="pageForm.Name">
+                                        <Form.Label>Post Name</Form.Label>
+                                        <Form.Control value={this.state.pageName} onChange={this.handlePageNameChange} type="name" placeholder="Example post name...."/>
                                     </Form.Group>
-                                    <Form.Group controlId="PostForm.ID">
-                                        <Form.Label>Page ID</Form.Label>
+                                    <Form.Group controlId="pageForm.ParentID">
+                                        <Form.Label>Parent Page ID</Form.Label>
                                         <Form.Control as="select">
-
                                         </Form.Control>
                                     </Form.Group>
-                                    <Form.Group onChange={this.selectIcon.bind(this)} controlId="PostForm.Icon">
-                                        <Form.Label>Page Icon <FeatherIcon icon={this.state.selectedIcon}/></Form.Label>
+                                    <Form.Group onChange={this.selectPageIcon.bind(this)} controlId="PostForm.Icon">
+                                        <Form.Label>Page Icon <FeatherIcon
+                                            icon={this.state.selectedPageIcon}/></Form.Label>
                                         <Form.Control as="select">
                                             <option>activity</option>
                                             <option>airplay</option>
@@ -486,9 +477,9 @@ class App extends Component {
                                     </Form.Group>
                                 </Form>
                                 <Button variant={'primary'}
-                                        disabled={(this.state.isLoading)}
-                                        onClick={!(this.state.isLoading) ? this.addPage : null}>
-                                    {(this.state.isLoading) ? <Spinner
+                                        disabled={(this.state.pageIsLoading)}
+                                        onClick={!(this.state.pageIsLoading) ? this.addPage : null}>
+                                    {(this.state.pageIsLoading) ? <Spinner
                                         as="span"
                                         animation="grow"
                                         size="sm"
@@ -503,25 +494,41 @@ class App extends Component {
                 </Row>
                 <br/>
                 <Row>
-                    <Col m={6}>
+                    <Col>
                         <Card>
-                            <Card.Header>CRUD Operations on Posts</Card.Header>
+                            <Card.Header>Create/Edit Post</Card.Header>
                             <Card.Body>
-                                <Card.Text>
-                                </Card.Text>
+                                <Editor
+                                    value={this.state.postContents}
+                                    onEditorChange={this.handleEditorChange}
+                                    initialValue="<p>This is the initial content of the editor</p>"
+                                    init={{
+                                        height: 500,
+                                        menubar: true,
+                                        plugins: [
+                                            'advlist autolink lists link image charmap print preview anchor',
+                                            'searchreplace visualblocks code fullscreen',
+                                            'insertdatetime media table paste code help wordcount'
+                                        ],
+                                        toolbar:
+                                            'undo redo | formatselect | bold italic backcolor | \
+                                            alignleft aligncenter alignright alignjustify | \
+                                            bullist numlist outdent indent | removeformat | help'
+                                    }}/>
                                 <Form>
                                     <Form.Group controlId="postForm.Name">
-                                        <Form.Label>Page Name</Form.Label>
-                                        <Form.Control type="name" placeholder="Example page name...."/>
+                                        <Form.Label>Post Name</Form.Label>
+                                        <Form.Control value={this.state.postName} onChange={this.handlePostNameChange} type="name" placeholder="Example post name...."/>
                                     </Form.Group>
-                                    <Form.Group controlId="PostForm.ID">
-                                        <Form.Label>Page ID</Form.Label>
-                                        <Form.Control as="select">
-
+                                    <Form.Group controlId="PostForm.ParentID">
+                                        <Form.Label>Parent Page ID</Form.Label>
+                                        <Form.Control value={this.state.pageID} onChange={this.handlePageID} as="select">
+                                            {pageListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
-                                    <Form.Group onChange={this.selectIcon.bind(this)} controlId="PostForm.Icon">
-                                        <Form.Label>Page Icon <FeatherIcon icon={this.state.selectedIcon}/></Form.Label>
+                                    <Form.Group onChange={this.selectPostIcon.bind(this)} controlId="PostForm.Icon">
+                                        <Form.Label>Page Icon <FeatherIcon
+                                            icon={this.state.selectedPostIcon}/></Form.Label>
                                         <Form.Control as="select">
                                             <option>activity</option>
                                             <option>airplay</option>
@@ -809,16 +816,28 @@ class App extends Component {
                                     </Form.Group>
                                 </Form>
                                 <Button variant={'primary'}
-                                        disabled={(this.state.isLoading)}
-                                        onClick={!(this.state.isLoading) ? this.addPage : null}>
-                                    {(this.state.isLoading) ? <Spinner
+                                        disabled={(this.state.postIsLoading)}
+                                        onClick={!(this.state.postIsLoading) ? this.addPost : null}>
+                                    {(this.state.postIsLoading) ? <Spinner
                                         as="span"
                                         animation="grow"
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
                                     /> : ''}
-                                    {'Add Page'}
+                                    {'Add Post'}
+                                </Button>
+                                <Button variant={'primary'}
+                                        disabled={(this.state.postIsLoading)}
+                                        onClick={!(this.state.postIsLoading) ? this.loadData : null}>
+                                    {(this.state.postIsLoading) ? <Spinner
+                                        as="span"
+                                        animation="grow"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    /> : ''}
+                                    {'Sync Data'}
                                 </Button>
                             </Card.Body>
                         </Card>
