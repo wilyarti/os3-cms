@@ -42,6 +42,8 @@ class App extends Component {
         this.handlePageID = this.handlePageID.bind(this);
         this.handleEditorChange = this.handleEditorChange.bind(this);
         this.loadData = this.loadData.bind(this);
+        this.getPages = this.getPages.bind(this);
+        this.getPosts = this.getPosts.bind(this);
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
         this.deletePage = this.deletePage.bind(this);
@@ -80,6 +82,45 @@ class App extends Component {
 
     createPage() {
 
+    }
+
+    // get pages list from server
+    getPages() {
+        this.setState({pageIsLoading: true});
+        fetch("/api/getPages").then(response => response.json())
+            .then((data) => {
+                console.log(data)
+                this.setState({pageList: data})
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                if (this.state.pageList > 0) {
+                    this.setState({pageIsLoading: false, pageID: this.state.pageList[0].id, selectedPageIDTBD: this.state.pageList[0].id }) // set our page id so drop down works
+                } else {
+                    this.setState({pageIsLoading: false}) // set our page id so drop down works
+                }
+            })
+    }
+    // get post list from server
+    getPosts() {
+        this.setState({postIsLoading: true});
+        fetch("/api/getPosts").then(response => response.json())
+            .then((data) => {
+                console.log(data)
+                this.setState({postList: data})
+            })
+            .catch((error) => {
+                alert(`${error} retrieving posts failed.`)
+            })
+            .finally((data) => {
+                if (this.state.postList.length > 0) {
+                    this.setState({postIsLoading: false, postID: this.state.postList[0].id, selectedPostIDTBD: this.state.postList[0].id })
+                } else {
+                    this.setState({postIsLoading: false})
+                }
+            })
     }
 
     loadData() {
@@ -181,7 +222,7 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({pageIsLoading: false});
-                this.loadData();
+                this.getPages();
             })
     }
     deletePost() {
@@ -207,11 +248,17 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({postIsLoading: false});
-                this.loadData();
+                this.getPosts();
             })
+    }
+    componentWillMount() {
+        this.getPosts(); // load our post and page list on load
+        this.getPages();
     }
     render() {
         const ourPages = this.state.pageList;
+        const ourPosts = this.state.postList;
+
         const pageListDropDownMenu = ourPages.map((_, index) => {
             return (
                 <option
@@ -219,13 +266,10 @@ class App extends Component {
             )
         });
 
-        const postListDropDownMenu = ourPages.map((_, index) => {
-            const postBlob = this.state.pageList[index].posts.map((_, postIndex) => {
+        const postListDropDownMenu = ourPosts.map((_, index) => {
                 return (
-                    <option value={this.state.pageList[index].posts[postIndex].id}>[{this.state.pageList[index].posts[postIndex].id}] {this.state.pageList[index].posts[postIndex].name}</option>
+                    <option value={this.state.postList[index].id}>[{this.state.postList[index].id}] {this.state.postList[index].name}</option>
                 );
-            });
-            return postBlob
         });
 
         return (
@@ -906,7 +950,6 @@ class App extends Component {
                                     <Form.Group controlId="deleteForm.pageName">
                                         <Form.Label>Select Page</Form.Label>
                                         <Form.Control value={this.state.selectedPageIDTBD} onChange={this.handlePageIDTBD} as="select">
-                                            <option disabled={false}>Select Page....</option>
                                             {pageListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
@@ -925,7 +968,6 @@ class App extends Component {
                                     <Form.Group controlId="deleteForm.postName">
                                         <Form.Label>Select Post</Form.Label>
                                         <Form.Control value={this.state.selectedPostIDTBD} onChange={this.handlePostIDTBD} as="select">
-                                            <option disabled={false}>Select Post....</option>
                                             {postListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
