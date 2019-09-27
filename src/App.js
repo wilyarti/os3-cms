@@ -9,16 +9,15 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
-import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner';
 import FeatherIcon from 'feather-icons-react';
 import {Editor} from '@tinymce/tinymce-react';
-import {Settings, BarChart2, Info, Sliders, TrendingUp, TrendingDown, Activity} from 'react-feather';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            editModeBoolean: false,
             postIsLoading: false,
             pageIsLoading: false,
             selectedPageIcon: "camera",
@@ -33,6 +32,7 @@ class App extends Component {
             selectedPostIDTBD: ''
         };
         this.addPage = this.addPage.bind(this);
+        this.handleEditMode = this.handleEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
         this.createPage = this.createPage.bind(this);
         this.selectPageIcon = this.selectPageIcon.bind(this);
@@ -48,6 +48,13 @@ class App extends Component {
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
+    }
+
+    handleEditMode() {
+        console.log("Toggle edit mode...");
+        console.log(this.state);
+        const newEditMode = !this.state.editModeBoolean;
+        this.setState({editModeBoolean: newEditMode})
     }
 
     handlePageIDTBD(e) {
@@ -99,7 +106,7 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({pageIsLoading: false}) // set our page id so drop down works
+                this.setState({pageIsLoading: false}); // set our page id so drop down works
                 if (this.state.pageList.length > 0) {
                     this.setState({
                         pageIsLoading: false,
@@ -137,7 +144,7 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         fetch("/api/getAllPostsAndPages").then(response => response.json())
             .then((data) => {
-                console.log(data)
+                console.log(data);
                 this.setState({pageList: data})
             })
             .catch((error) => {
@@ -220,8 +227,8 @@ class App extends Component {
         };
         fetch("/api/deletePage",
             {
-                method: 'POST', // or 'PUT'
-                body: JSON.stringify(data), // data can be `string` or {object}!
+                method: 'POST',
+                body: JSON.stringify(data),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -247,8 +254,8 @@ class App extends Component {
         };
         fetch("/api/deletePost",
             {
-                method: 'POST', // or 'PUT'
-                body: JSON.stringify(data), // data can be `string` or {object}!
+                method: 'POST',
+                body: JSON.stringify(data),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -317,12 +324,25 @@ class App extends Component {
                                             alignleft aligncenter alignright alignjustify | \
                                             bullist numlist outdent indent | removeformat | help'
                                     }}/>
-                                <Form>
-                                    <Form.Group controlId="postForm.Name">
-                                        <Form.Label>Post Name</Form.Label>
-                                        <Form.Control value={this.state.postName} onChange={this.handlePostNameChange}
-                                                      type="name" placeholder="Example post name...."/>
-                                    </Form.Group>
+
+
+
+                                    <Form>
+                                        <Form.Group  controlId="postForm.Name">
+                                            <Form.Label>Post Name</Form.Label>
+                                            <Form.Control value={this.state.postName} onChange={this.handlePostNameChange}
+                                                          type="name" placeholder="Example post name...."/>
+                                        </Form.Group>
+                                        {this.state.editModeBoolean &&
+                                        <Form.Group controlId="deleteForm.postName">
+                                            <Form.Label>Select Post</Form.Label>
+                                            <Form.Control
+                                                          value={this.state.selectedPostIDTBD}
+                                                          onChange={this.handlePostIDTBD} as="select">
+                                                {postListDropDownMenu}
+                                            </Form.Control>
+                                        </Form.Group>
+                                        }
                                     <Form.Group controlId="PostForm.ParentID">
                                         <Form.Label>Parent Page ID</Form.Label>
                                         <Form.Control value={this.state.pageID} onChange={this.handlePageID}
@@ -618,7 +638,14 @@ class App extends Component {
                                             <option>zoom-out</option>
                                         </Form.Control>
                                     </Form.Group>
+
+                                    <Form.Group controlId="formBasicCheckbox">
+                                        <Form.Check type="checkbox" label="Edit Mode" value={this.state.editModeBoolean} onChange={this.handleEditMode} >
+                                        </Form.Check>
+
+                                    </Form.Group>
                                 </Form>
+
                                 <Button variant={'primary'}
                                         disabled={(this.state.postIsLoading)}
                                         onClick={!(this.state.postIsLoading) ? this.addPost : null}>
@@ -1005,18 +1032,6 @@ class App extends Component {
                                     </Button>
                                 </Form>
                                 <br/>
-                                <Button variant={'primary'}
-                                        disabled={(this.state.pageIsLoading)}
-                                        onClick={!(this.state.pageIsLoading) ? this.loadData : null}>
-                                    {(this.state.pageIsLoading) ? <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    /> : ''}
-                                    {'Retrieve Page/Post List'}
-                                </Button>
                             </Card.Body>
                         </Card>
                     </Col>
