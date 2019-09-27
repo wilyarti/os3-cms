@@ -49,12 +49,15 @@ class App extends Component {
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
     }
-    handlePageIDTBD (e) {
+
+    handlePageIDTBD(e) {
         this.setState({selectedPageIDTBD: e.target.value})
     }
-    handlePostIDTBD (e) {
+
+    handlePostIDTBD(e) {
         this.setState({selectedPostIDTBD: e.target.value})
     }
+
     handleEditorChange(content, editor) {
         this.setState({postContents: content})
     }
@@ -89,36 +92,43 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         fetch("/api/getPages").then(response => response.json())
             .then((data) => {
-                console.log(data)
-                this.setState({pageList: data})
+                console.log(data);
+                this.setState({pageList: data});
             })
             .catch((error) => {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                if (this.state.pageList > 0) {
-                    this.setState({pageIsLoading: false, pageID: this.state.pageList[0].id, selectedPageIDTBD: this.state.pageList[0].id }) // set our page id so drop down works
-                } else {
-                    this.setState({pageIsLoading: false}) // set our page id so drop down works
+                this.setState({pageIsLoading: false}) // set our page id so drop down works
+                if (this.state.pageList.length > 0) {
+                    this.setState({
+                        pageIsLoading: false,
+                        pageID: this.state.pageList[0].id,
+                        selectedPageIDTBD: this.state.pageList[0].id
+                    }) // set our page id so drop down works
                 }
-            })
+            });
     }
+
     // get post list from server
     getPosts() {
         this.setState({postIsLoading: true});
         fetch("/api/getPosts").then(response => response.json())
             .then((data) => {
-                console.log(data)
-                this.setState({postList: data})
+                console.log(data);
+                this.setState({postList: data});
             })
             .catch((error) => {
                 alert(`${error} retrieving posts failed.`)
             })
             .finally((data) => {
+                this.setState({postIsLoading: false});
                 if (this.state.postList.length > 0) {
-                    this.setState({postIsLoading: false, postID: this.state.postList[0].id, selectedPostIDTBD: this.state.postList[0].id })
-                } else {
-                    this.setState({postIsLoading: false})
+                    this.setState({
+                        postIsLoading: false,
+                        postID: this.state.postList[0].id,
+                        selectedPostIDTBD: this.state.postList[0].id
+                    }) // set our page id so drop down works
                 }
             })
     }
@@ -134,8 +144,10 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({pageIsLoading: false, pageID: this.state.pageList[0].id, selectedPageIDTBD: '',
-                    selectedPostIDTBD: ''})
+                this.setState({
+                    pageIsLoading: false, pageID: this.state.pageList[0].id, selectedPageIDTBD: '',
+                    selectedPostIDTBD: ''
+                })
             })
     }
 
@@ -164,7 +176,7 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({pageIsLoading: false});
-                this.loadData();
+                this.getPages();
             })
     }
 
@@ -195,12 +207,14 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({postIsLoading: false});
-                this.loadData();
+                this.getPosts();
             })
     }
+
     deletePage() {
         console.log(this.state)
         this.setState({pageIsLoading: true});
+        console.log(`Page ID: ${this.state.pageID}`);
         var data = {
             id: this.state.selectedPageIDTBD,
         };
@@ -221,12 +235,13 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({pageIsLoading: false});
                 this.getPages();
             })
     }
+
     deletePost() {
         this.setState({postIsLoading: true});
+        console.log(`Post ID: ${this.state.postID}`);
         var data = {
             id: this.state.selectedPostIDTBD,
         };
@@ -247,14 +262,16 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({postIsLoading: false});
                 this.getPosts();
             })
     }
+
     componentWillMount() {
         this.getPosts(); // load our post and page list on load
         this.getPages();
+        console.log(this.state);
     }
+
     render() {
         const ourPages = this.state.pageList;
         const ourPosts = this.state.postList;
@@ -267,9 +284,10 @@ class App extends Component {
         });
 
         const postListDropDownMenu = ourPosts.map((_, index) => {
-                return (
-                    <option value={this.state.postList[index].id}>[{this.state.postList[index].id}] {this.state.postList[index].name}</option>
-                );
+            return (
+                <option
+                    value={this.state.postList[index].id}>[{this.state.postList[index].id}] {this.state.postList[index].name}</option>
+            );
         });
 
         return (
@@ -949,7 +967,8 @@ class App extends Component {
                                 <Form>
                                     <Form.Group controlId="deleteForm.pageName">
                                         <Form.Label>Select Page</Form.Label>
-                                        <Form.Control value={this.state.selectedPageIDTBD} onChange={this.handlePageIDTBD} as="select">
+                                        <Form.Control value={this.state.selectedPageIDTBD}
+                                                      onChange={this.handlePageIDTBD} as="select">
                                             {pageListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
@@ -967,7 +986,8 @@ class App extends Component {
                                     </Button>
                                     <Form.Group controlId="deleteForm.postName">
                                         <Form.Label>Select Post</Form.Label>
-                                        <Form.Control value={this.state.selectedPostIDTBD} onChange={this.handlePostIDTBD} as="select">
+                                        <Form.Control value={this.state.selectedPostIDTBD}
+                                                      onChange={this.handlePostIDTBD} as="select">
                                             {postListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
