@@ -29,7 +29,8 @@ class App extends Component {
             pageName: "Please enter a name...",
             postName: "Please enter a name...",
             selectedPageIDTBD: '',
-            selectedPostIDTBD: ''
+            selectedPostIDTBD: '',
+            selectedPostIDTBE: ''
         };
         this.addPage = this.addPage.bind(this);
         this.handleEditMode = this.handleEditMode.bind(this);
@@ -40,19 +41,19 @@ class App extends Component {
         this.handlePageNameChange = this.handlePageNameChange.bind(this);
         this.handlePostNameChange = this.handlePostNameChange.bind(this);
         this.handlePageID = this.handlePageID.bind(this);
+
         this.handleEditorChange = this.handleEditorChange.bind(this);
         this.loadData = this.loadData.bind(this);
         this.getPages = this.getPages.bind(this);
         this.getPosts = this.getPosts.bind(this);
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
+        this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
     }
 
     handleEditMode() {
-        console.log("Toggle edit mode...");
-        console.log(this.state);
         const newEditMode = !this.state.editModeBoolean;
         this.setState({editModeBoolean: newEditMode})
     }
@@ -64,6 +65,22 @@ class App extends Component {
     handlePostIDTBD(e) {
         this.setState({selectedPostIDTBD: e.target.value})
     }
+    handlePostIDTBE(e) {
+        const thisPostID = e.target.value;
+        const thisPostList = this.state.postList;
+        const thisPost = thisPostList.find(post => {
+            return post.id === thisPostID
+        });
+        console.log("ostList: " + this.state.postList);
+        console.log("e target" + e.target.value);
+        console.log("thisPost: " + thisPost);
+        console.log(this.state);
+        if (typeof thisPost !== "undefined") {
+            this.setState({selectedPostIDTBE: thisPostID, postName: thisPost.name, selectedPostIcon: thisPost.icon, postContents: thisPost.contents})
+        }
+        this.setState({selectedPostIDTBE: thisPostID})
+    }
+
 
     handleEditorChange(content, editor) {
         this.setState({postContents: content})
@@ -78,7 +95,6 @@ class App extends Component {
     }
 
     handlePageID(e) {
-        console.log(e.target.value);
         this.setState({pageID: e.target.value});
     }
 
@@ -337,8 +353,8 @@ class App extends Component {
                                         <Form.Group controlId="deleteForm.postName">
                                             <Form.Label>Select Post</Form.Label>
                                             <Form.Control
-                                                          value={this.state.selectedPostIDTBD}
-                                                          onChange={this.handlePostIDTBD} as="select">
+                                                          value={this.state.selectedPostIDTBE}
+                                                          onChange={this.handlePostIDTBE} as="select">
                                                 {postListDropDownMenu}
                                             </Form.Control>
                                         </Form.Group>
@@ -656,7 +672,7 @@ class App extends Component {
                                         role="status"
                                         aria-hidden="true"
                                     /> : ''}
-                                    {'Add Post'}
+                                    {this.state.editModeBoolean ? 'Update': 'Add Post'}
                                 </Button>
                             </Card.Body>
                         </Card>
