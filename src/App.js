@@ -30,11 +30,13 @@ class App extends Component {
             postName: "Please enter a name...",
             selectedPageIDTBD: '',
             selectedPostIDTBD: '',
-            selectedPostIDTBE: ''
+            selectedPostIDTBE: '',
+            postListLookup: {}
         };
         this.addPage = this.addPage.bind(this);
         this.handleEditMode = this.handleEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
+        this.updatePost = this.updatePost.bind(this);
         this.createPage = this.createPage.bind(this);
         this.selectPageIcon = this.selectPageIcon.bind(this);
         this.selectPostIcon = this.selectPostIcon.bind(this);
@@ -67,14 +69,7 @@ class App extends Component {
     }
     handlePostIDTBE(e) {
         const thisPostID = e.target.value;
-        const thisPostList = this.state.postList;
-        const thisPost = thisPostList.find(post => {
-            return post.id === thisPostID
-        });
-        console.log("ostList: " + this.state.postList);
-        console.log("e target" + e.target.value);
-        console.log("thisPost: " + thisPost);
-        console.log(this.state);
+        const thisPost = this.state.postListLookup[thisPostID];
         if (typeof thisPost !== "undefined") {
             this.setState({selectedPostIDTBE: thisPostID, postName: thisPost.name, selectedPostIcon: thisPost.icon, postContents: thisPost.contents})
         }
@@ -139,7 +134,16 @@ class App extends Component {
         fetch("/api/getPosts").then(response => response.json())
             .then((data) => {
                 console.log(data);
-                this.setState({postList: data});
+                let lookup = {};
+                for (let i = 0, len = data.length; i < len; i++) {
+                    lookup[data[i].id] = data[i];
+                }
+                console.log("Data: ");
+                console.log(data);
+                console.log("lookup");
+                console.log(lookup);
+                console.log("lookup");
+                this.setState({postList: data, postListLookup: lookup});
             })
             .catch((error) => {
                 alert(`${error} retrieving posts failed.`)
@@ -202,8 +206,48 @@ class App extends Component {
                 this.getPages();
             })
     }
-
+    // API not implemented yet ....
+    // Need to sort out a way to flush the cache of posts and pages without interrupting editing flow.
+    // I will need to implement a new function that does not effect the current state of the editing config,
+    // but still keeps the post/page list in sync.
+    updatePost() {
+        this.setState({postIsLoading: true});
+        var data = {
+            id: this.state.selectedPostIDTBE,
+            name: this.state.postName,
+            pageID: this.state.pageID,
+            icon: this.state.selectedPostIcon,
+            createdTime: new Date(),
+            contents: this.state.postContents
+        };
+        fetch("/api/updatePost",
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then((data) => {
+                if (data.success !== true) {
+                    alert("Unable to update post." + data.errorMessage)
+                }
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                this.setState({postIsLoading: false});
+                this.getPosts();
+            })
+    }
     addPost() {
+        if (this.state.editModeBoolean) {
+            console.log("Updating post");
+            this.updatePost();
+            return;
+        }
+        console.log("Adding post");
         this.setState({postIsLoading: true});
         var data = {
             name: this.state.postName,
@@ -214,8 +258,8 @@ class App extends Component {
         };
         fetch("/api/addPost",
             {
-                method: 'POST', // or 'PUT'
-                body: JSON.stringify(data), // data can be `string` or {object}!
+                method: 'POST',
+                body: JSON.stringify(data),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -366,10 +410,10 @@ class App extends Component {
                                             {pageListDropDownMenu}
                                         </Form.Control>
                                     </Form.Group>
-                                    <Form.Group onChange={this.selectPostIcon.bind(this)} controlId="PostForm.Icon">
+                                    <Form.Group controlId="PostForm.Icon">
                                         <Form.Label>Page Icon <FeatherIcon
                                             icon={this.state.selectedPostIcon}/></Form.Label>
-                                        <Form.Control as="select">
+                                        <Form.Control onChange={this.selectPostIcon.bind(this)}  value={this.state.selectedPostIcon} as="select">
                                             <option>activity</option>
                                             <option>airplay</option>
                                             <option>alert-circle</option>
