@@ -18,6 +18,7 @@ class App extends Component {
         super(props);
         this.state = {
             editModeBoolean: false,
+            autoUpdateBoolean: true,
             postIsLoading: false,
             pageIsLoading: false,
             selectedPageIcon: "camera",
@@ -76,9 +77,8 @@ class App extends Component {
         this.setState({selectedPostIDTBE: thisPostID})
     }
 
-
     handleEditorChange(content, editor) {
-        this.setState({postContents: content})
+        this.setState({postContents: content});
     }
 
     handlePageNameChange(e) {
@@ -86,7 +86,7 @@ class App extends Component {
     }
 
     handlePostNameChange(e) {
-        this.setState({postName: e.target.value})
+        this.setState({postName: e.target.value});
     }
 
     handlePageID(e) {
@@ -98,7 +98,7 @@ class App extends Component {
     }
 
     selectPostIcon(icon) {
-        this.setState({selectedPostIcon: icon.target.value})
+        this.setState({selectedPostIcon: icon.target.value});
     }
 
     createPage() {
@@ -702,7 +702,6 @@ class App extends Component {
                                     <Form.Group controlId="formBasicCheckbox">
                                         <Form.Check type="checkbox" label="Edit Mode" value={this.state.editModeBoolean} onChange={this.handleEditMode} >
                                         </Form.Check>
-
                                     </Form.Group>
                                 </Form>
 
