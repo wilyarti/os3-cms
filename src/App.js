@@ -748,6 +748,7 @@ class App extends Component {
                                             <option>zoom-out</option>
                                         </Form.Control>
                                     </Form.Group>
+                                        //TODO auto select first item in postList[] and autofill contents of fields.
 
                                     <Form.Group controlId="formBasicCheckbox">
                                         <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPostBoolean} onChange={this.handlePostEditMode} >
@@ -785,6 +786,7 @@ class App extends Component {
                                         <Form.Control value={this.state.pageName} onChange={this.handlePageNameChange}
                                                       type="name" placeholder="Example post name...."/>
                                     </Form.Group>
+                                    //TODO enable parentID feature. It currently does nothing.
                                     <Form.Group controlId="pageForm.ParentID">
                                         <Form.Label>Parent Page ID</Form.Label>
                                         <Form.Control as="select">
@@ -1089,6 +1091,7 @@ class App extends Component {
                                         </Form.Control>
                                     </Form.Group>
                                 </Form>
+                                //TODO auto select first item in pageList[] and autofill contents of fields.
                                 <Form.Group controlId="formBasicCheckbox2">
                                     <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPageBoolean} onChange={this.handlePageEditMode} >
                                     </Form.Check>
