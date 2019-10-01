@@ -17,8 +17,8 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            editModeBoolean: false,
-            autoUpdateBoolean: true,
+            editPostBoolean: false,
+            eidtPageBoolean: false,
             postIsLoading: false,
             pageIsLoading: false,
             selectedPageIcon: "camera",
@@ -31,11 +31,14 @@ class App extends Component {
             postName: "Please enter a name...",
             selectedPageIDTBD: '',
             selectedPostIDTBD: '',
+            selectedPageIDTBE: '',
             selectedPostIDTBE: '',
+            pageListLookup: {},
             postListLookup: {}
         };
         this.addPage = this.addPage.bind(this);
-        this.handleEditMode = this.handleEditMode.bind(this);
+        this.handlePostEditMode = this.handlePostEditMode.bind(this);
+        this.handlePageEditMode = this.handlePageEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
         this.updatePost = this.updatePost.bind(this);
         this.createPage = this.createPage.bind(this);
@@ -51,14 +54,20 @@ class App extends Component {
         this.getPosts = this.getPosts.bind(this);
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
+        this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
         this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
     }
 
-    handleEditMode() {
-        const newEditMode = !this.state.editModeBoolean;
-        this.setState({editModeBoolean: newEditMode})
+    handlePostEditMode() {
+        const newEditMode = !this.state.editPostBoolean;
+        this.setState({editPostBoolean: newEditMode})
+    }
+
+    handlePageEditMode() {
+        const newEditMode = !this.state.editPageBoolean;
+        this.setState({editPageBoolean: newEditMode})
     }
 
     handlePageIDTBD(e) {
@@ -68,6 +77,15 @@ class App extends Component {
     handlePostIDTBD(e) {
         this.setState({selectedPostIDTBD: e.target.value})
     }
+    handlePageIDTBE(e) {
+        const thisPageID = e.target.value;
+        const thisPage = this.state.pageListLookup[thisPageID];
+        if (typeof thisPage !== "undefined") {
+            this.setState({selectedPageIDTBE: thisPageID, pageName: thisPage.name, selectedPageIcon: thisPage.icon, pageContents: thisPage.contents})
+        }
+        this.setState({selectedPageIDTBE: thisPageID})
+    }
+
     handlePostIDTBE(e) {
         const thisPostID = e.target.value;
         const thisPost = this.state.postListLookup[thisPostID];
@@ -111,7 +129,12 @@ class App extends Component {
         fetch("/api/getPages").then(response => response.json())
             .then((data) => {
                 console.log(data);
-                this.setState({pageList: data});
+                let lookup = {};
+                for (let i = 0, len = data.length; i < len; i++) {
+                    lookup[data[i].id] = data[i];
+                }
+                console.log(lookup);
+                this.setState({pageList: data, pageListLookup: lookup});
             })
             .catch((error) => {
                 alert(`${error} retrieving pages failed.`)
@@ -138,11 +161,6 @@ class App extends Component {
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
                 }
-                console.log("Data: ");
-                console.log(data);
-                console.log("lookup");
-                console.log(lookup);
-                console.log("lookup");
                 this.setState({postList: data, postListLookup: lookup});
             })
             .catch((error) => {
@@ -179,6 +197,11 @@ class App extends Component {
     }
 
     addPage() {
+        if (this.state.editPageBoolean) {
+            console.log("Updating page");
+            this.updatePage();
+            return;
+        }
         this.setState({pageIsLoading: true});
         var data = {
             name: this.state.pageName,
@@ -206,10 +229,37 @@ class App extends Component {
                 this.getPages();
             })
     }
-    // API not implemented yet ....
-    // Need to sort out a way to flush the cache of posts and pages without interrupting editing flow.
-    // I will need to implement a new function that does not effect the current state of the editing config,
-    // but still keeps the post/page list in sync.
+    updatePage() {
+        this.setState({pageIsLoading: true});
+        var data = {
+            id: this.state.selectedPageIDTBE,
+            name: this.state.pageName,
+            pageID: this.state.pageID,
+            icon: this.state.selectedPageIcon,
+            createdTime: new Date(),
+            contents: this.state.pageContents
+        };
+        fetch("/api/updatePage",
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then((data) => {
+                if (data.success !== true) {
+                    alert("Unable to update page." + data.errorMessage)
+                }
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                this.setState({pageIsLoading: false});
+                this.getPages();
+            })
+    }
     updatePost() {
         this.setState({postIsLoading: true});
         var data = {
@@ -242,7 +292,7 @@ class App extends Component {
             })
     }
     addPost() {
-        if (this.state.editModeBoolean) {
+        if (this.state.editPostBoolean) {
             console.log("Updating post");
             this.updatePost();
             return;
@@ -393,7 +443,7 @@ class App extends Component {
                                             <Form.Control value={this.state.postName} onChange={this.handlePostNameChange}
                                                           type="name" placeholder="Example post name...."/>
                                         </Form.Group>
-                                        {this.state.editModeBoolean &&
+                                        {this.state.editPostBoolean &&
                                         <Form.Group controlId="deleteForm.postName">
                                             <Form.Label>Select Post</Form.Label>
                                             <Form.Control
@@ -700,7 +750,7 @@ class App extends Component {
                                     </Form.Group>
 
                                     <Form.Group controlId="formBasicCheckbox">
-                                        <Form.Check type="checkbox" label="Edit Mode" value={this.state.editModeBoolean} onChange={this.handleEditMode} >
+                                        <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPostBoolean} onChange={this.handlePostEditMode} >
                                         </Form.Check>
                                     </Form.Group>
                                 </Form>
@@ -715,7 +765,7 @@ class App extends Component {
                                         role="status"
                                         aria-hidden="true"
                                     /> : ''}
-                                    {this.state.editModeBoolean ? 'Update': 'Add Post'}
+                                    {this.state.editPostBoolean ? 'Update': 'Add Post'}
                                 </Button>
                             </Card.Body>
                         </Card>
@@ -740,6 +790,16 @@ class App extends Component {
                                         <Form.Control as="select">
                                         </Form.Control>
                                     </Form.Group>
+                                    {this.state.editPageBoolean &&
+                                    <Form.Group controlId="deleteForm.pageName">
+                                        <Form.Label>Select Page</Form.Label>
+                                        <Form.Control
+                                            value={this.state.selectedPageIDTBE}
+                                            onChange={this.handlePageIDTBE} as="select">
+                                            {pageListDropDownMenu}
+                                        </Form.Control>
+                                    </Form.Group>
+                                    }
                                     <Form.Group onChange={this.selectPageIcon.bind(this)} controlId="PostForm.Icon">
                                         <Form.Label>Page Icon <FeatherIcon
                                             icon={this.state.selectedPageIcon}/></Form.Label>
@@ -1029,6 +1089,11 @@ class App extends Component {
                                         </Form.Control>
                                     </Form.Group>
                                 </Form>
+                                <Form.Group controlId="formBasicCheckbox2">
+                                    <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPageBoolean} onChange={this.handlePageEditMode} >
+                                    </Form.Check>
+                                </Form.Group>
+
                                 <Button variant={'primary'}
                                         disabled={(this.state.pageIsLoading)}
                                         onClick={!(this.state.pageIsLoading) ? this.addPage : null}>
@@ -1039,7 +1104,7 @@ class App extends Component {
                                         role="status"
                                         aria-hidden="true"
                                     /> : ''}
-                                    {'Add Page'}
+                                    {this.state.editPageBoolean ? 'Update Page' : 'Add Page'}
                                 </Button>
                             </Card.Body>
                         </Card>
