@@ -2,15 +2,12 @@ import React, {Component} from 'react';
 
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Nav from 'react-bootstrap/Nav';
 import Container from 'react-bootstrap/Container';
-import Card from 'react-bootstrap/Card'
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
-
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import FeatherIcon from 'feather-icons-react';
@@ -405,7 +402,7 @@ class App extends Component {
     }
 
     deletePage() {
-        console.log(this.state)
+        console.log(this.state);
         this.setState({pageIsLoading: true});
         console.log(`Page ID: ${this.state.pageID}`);
         var data = {
@@ -500,219 +497,262 @@ class App extends Component {
                     <Tab eventKey="editPost"
                          title='Edit Post'>
                         <br/>
-                        <Card>
-                            <Card.Header>Create/Edit Post</Card.Header>
-                            <Card.Body>
-                                <Editor
-                                    value={this.state.postContents}
-                                    onEditorChange={this.handleEditorChange}
-                                    initialValue="<p>This is the initial content of the editor</p>"
-                                    init={{
-                                        height: 500,
-                                        menubar: true,
-                                        plugins: [
-                                            'advlist autolink lists link image charmap print preview anchor',
-                                            'searchreplace visualblocks code fullscreen',
-                                            'insertdatetime media table paste code help wordcount'
-                                        ],
-                                        toolbar:
-                                            'undo redo | formatselect | bold italic backcolor | \
-                                            alignleft aligncenter alignright alignjustify | \
-                                            bullist numlist outdent indent | removeformat | help'
-                                    }}/>
+                        <post>
+                            <post-contents>
+                                <Row>
+                                    <Col xs={12}>
+                                        <Editor
+                                            value={this.state.postContents}
+                                            onEditorChange={this.handleEditorChange}
+                                            initialValue="<p>This is the initial content of the editor</p>"
+                                            init={{
+                                                height: 500,
+                                                menubar: true,
+                                                plugins: [
+                                                    'advlist autolink lists link image charmap print preview anchor',
+                                                    'searchreplace visualblocks code fullscreen',
+                                                    'insertdatetime media table paste code help wordcount'
+                                                ],
+                                                toolbar:
+                                                    'undo redo | formatselect | bold italic backcolor | \
+                                                    alignleft aligncenter alignright alignjustify | \
+                                                    bullist numlist outdent indent | removeformat | help'
+                                            }}/>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
 
+                                            <Form.Group controlId="postForm.Edit">
+                                                <Form.Label>Post Name</Form.Label>
+                                                <Form.Control value={this.state.postName}
+                                                              onChange={this.handlePostNameChange}
+                                                              type="name" placeholder="Example post name...."/>
+                                            </Form.Group>
+                                        </Form>
+                                    </Col>
 
-                                <Form>
-                                    <Form.Group controlId="postForm.Name">
-                                        <Form.Label>Post Name</Form.Label>
-                                        <Form.Control value={this.state.postName} onChange={this.handlePostNameChange}
-                                                      type="name" placeholder="Example post name...."/>
-                                    </Form.Group>
-                                    {this.state.editPostBoolean &&
-                                    <Form.Group controlId="deleteForm.postName">
-                                        <Form.Label>Select Post</Form.Label>
-                                        <Form.Control
-                                            value={this.state.selectedPostIDTBE}
-                                            onChange={this.handlePostIDTBE} as="select">
-                                            {postListDropDownMenu}
-                                        </Form.Control>
-                                    </Form.Group>
-                                    }
-                                    <Form.Group controlId="PostForm.ParentID">
-                                        <Form.Label>Parent Page ID</Form.Label>
-                                        <Form.Control value={this.state.pageID} onChange={this.handlePageID}
-                                                      as="select">
-                                            {pageListDropDownMenu}
-                                        </Form.Control>
-                                    </Form.Group>
-                                    <Form.Group controlId="PostForm.Icon">
-                                        <Form.Label>Page Icon <FeatherIcon
-                                            icon={this.state.selectedPostIcon}/></Form.Label>
-                                        <Form.Control onChange={this.selectPostIcon.bind(this)}
-                                                      value={this.state.selectedPostIcon} as="select">
-                                            {IconOptionList}
-                                        </Form.Control>
-                                    </Form.Group>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            {this.state.editPostBoolean &&
+                                            <Form.Group controlId="deleteForm.postName">
+                                                <Form.Label>Select Post</Form.Label>
+                                                <Form.Control
+                                                    value={this.state.selectedPostIDTBE}
+                                                    onChange={this.handlePostIDTBE} as="select">
+                                                    {postListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            }
+                                        </Form>
+                                    </Col>
 
-                                    <Form.Group controlId="formBasicCheckbox">
-                                        <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPostBoolean}
-                                                    onChange={this.handlePostEditMode}>
-                                        </Form.Check>
-                                    </Form.Group>
-                                </Form>
+                                </Row>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
 
-                                <Button variant={'primary'}
-                                        disabled={(this.state.postIsLoading)}
-                                        onClick={!(this.state.postIsLoading) ? this.addPost : null}>
-                                    {(this.state.postIsLoading) ? <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    /> : ''}
-                                    {this.state.editPostBoolean ? 'Update' : 'Add Post'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
+                                            <Form.Group controlId="PostForm.ParentID">
+                                                <Form.Label>Parent Page ID</Form.Label>
+                                                <Form.Control value={this.state.pageID} onChange={this.handlePageID}
+                                                              as="select">
+                                                    {pageListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                        </Form>
+                                    </Col>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            <Form.Group controlId="PostForm.Icon">
+                                                <Form.Label>Page Icon <FeatherIcon
+                                                    icon={this.state.selectedPostIcon}/></Form.Label>
+                                                <Form.Control onChange={this.selectPostIcon.bind(this)}
+                                                              value={this.state.selectedPostIcon} as="select">
+                                                    {IconOptionList}
+                                                </Form.Control>
+                                            </Form.Group>
+                                        </Form>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            <Form.Group controlId="formBasicCheckbox">
+                                                <Form.Check type="checkbox" label="Edit Mode"
+                                                            value={this.state.editPostBoolean}
+                                                            onChange={this.handlePostEditMode}>
+                                                </Form.Check>
+                                            </Form.Group>
+                                        </Form>
+                                    </Col>
+                                    <Col lg={4} xs={12}>
+                                        <Button variant={'primary'}
+                                                disabled={(this.state.postIsLoading)}
+                                                onClick={!(this.state.postIsLoading) ? this.addPost : null}>
+                                            {(this.state.postIsLoading) ? <Spinner
+                                                as="span"
+                                                animation="grow"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                            /> : ''}
+                                            {this.state.editPostBoolean ? 'Update' : 'Add Post'}
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </post-contents>
+                        </post>
                     </Tab>
                     <Tab eventKey="Page"
                          title='Edit Page'>
-                        <Card>
-                            <Card.Header>Create/Edit Page</Card.Header>
-                            <Card.Body>
-                                <Card.Text>
-                                </Card.Text>
-                                <Form>
-                                    <Form.Group controlId="pageForm.Name">
-                                        <Form.Label>Post Name</Form.Label>
-                                        <Form.Control value={this.state.pageName} onChange={this.handlePageNameChange}
-                                                      type="name" placeholder="Example post name...."/>
-                                    </Form.Group>
-                                    <Form.Group controlId="pageForm.ParentID">
-                                        <Form.Label>Parent Page ID</Form.Label>
-                                        <Form.Control as="select">
-                                        </Form.Control>
-                                    </Form.Group>
-                                    {this.state.editPageBoolean &&
-                                    <Form.Group controlId="deleteForm.pageName">
-                                        <Form.Label>Select Page</Form.Label>
-                                        <Form.Control
-                                            value={this.state.selectedPageIDTBE}
-                                            onChange={this.handlePageIDTBE} as="select">
-                                            {pageListDropDownMenu}
-                                        </Form.Control>
-                                    </Form.Group>
-                                    }
-                                    <Form.Group onChange={this.selectPageIcon.bind(this)} controlId="PostForm.Icon">
-                                        <Form.Label>Page Icon <FeatherIcon
-                                            icon={this.state.selectedPageIcon}/></Form.Label>
-                                        <Form.Control as="select">
-                                            {IconOptionList}
-                                        </Form.Control>
-                                    </Form.Group>
-                                </Form>
-                                <Form.Group controlId="formBasicCheckbox2">
-                                    <Form.Check type="checkbox" label="Edit Mode" value={this.state.editPageBoolean}
-                                                onChange={this.handlePageEditMode}>
-                                    </Form.Check>
-                                </Form.Group>
+                        <br/>
+                        <post>
+                            <post-contents>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            <Form.Group controlId="pageForm.Name">
+                                                <Form.Label>Post Name</Form.Label>
+                                                <Form.Control value={this.state.pageName}
+                                                              onChange={this.handlePageNameChange}
+                                                              type="name" placeholder="Example post name...."/>
+                                            </Form.Group>
+                                            <Form.Group controlId="pageForm.ParentID">
+                                                <Form.Label>Parent Page ID</Form.Label>
+                                                <Form.Control as="select">
+                                                </Form.Control>
+                                            </Form.Group>
+                                            {this.state.editPageBoolean &&
+                                            <Form.Group controlId="deleteForm.pageName">
+                                                <Form.Label>Select Page</Form.Label>
+                                                <Form.Control
+                                                    value={this.state.selectedPageIDTBE}
+                                                    onChange={this.handlePageIDTBE} as="select">
+                                                    {pageListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            }
+                                            <Form.Group onChange={this.selectPageIcon.bind(this)}
+                                                        controlId="PostForm.Icon">
+                                                <Form.Label>Page Icon <FeatherIcon
+                                                    icon={this.state.selectedPageIcon}/></Form.Label>
+                                                <Form.Control as="select">
+                                                    {IconOptionList}
+                                                </Form.Control>
+                                            </Form.Group>
+                                        </Form>
+                                        <Form.Group controlId="formBasicCheckbox2">
+                                            <Form.Check type="checkbox" label="Edit Mode"
+                                                        value={this.state.editPageBoolean}
+                                                        onChange={this.handlePageEditMode}>
+                                            </Form.Check>
+                                        </Form.Group>
 
-                                <Button variant={'primary'}
-                                        disabled={(this.state.pageIsLoading)}
-                                        onClick={!(this.state.pageIsLoading) ? this.addPage : null}>
-                                    {(this.state.pageIsLoading) ? <Spinner
-                                        as="span"
-                                        animation="grow"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    /> : ''}
-                                    {this.state.editPageBoolean ? 'Update Page' : 'Add Page'}
-                                </Button>
-                            </Card.Body>
-                        </Card>
+                                        <Button variant={'primary'}
+                                                disabled={(this.state.pageIsLoading)}
+                                                onClick={!(this.state.pageIsLoading) ? this.addPage : null}>
+                                            {(this.state.pageIsLoading) ? <Spinner
+                                                as="span"
+                                                animation="grow"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                            /> : ''}
+                                            {this.state.editPageBoolean ? 'Update Page' : 'Add Page'}
+                                        </Button>
+                                    </Col>
+                                </Row>
+                            </post-contents>
+                        </post>
                     </Tab>
                     <Tab eventKey="delete"
                          title='Delete Post/Page'>
-                        <Card>
-                            <Card.Header>Delete Post/Page</Card.Header>
-                            <Card.Body>
-                                <Card.Text>
-                                </Card.Text>
-                                <Form>
-                                    <Form.Group controlId="deleteForm.pageName">
-                                        <Form.Label>Select Page</Form.Label>
-                                        <Form.Control value={this.state.selectedPageIDTBD}
-                                                      onChange={this.handlePageIDTBD} as="select">
-                                            {pageListDropDownMenu}
-                                        </Form.Control>
-                                    </Form.Group>
-                                    <Button variant={'primary'}
-                                            disabled={(this.state.pageIsLoading)}
-                                            onClick={!(this.state.pageIsLoading) ? this.deletePage : null}>
-                                        {(this.state.pageIsLoading) ? <Spinner
-                                            as="span"
-                                            animation="grow"
-                                            size="sm"
-                                            role="status"
-                                            aria-hidden="true"
-                                        /> : ''}
-                                        {'Delete Page'}
-                                    </Button>
-                                    <Form.Group controlId="deleteForm.postName">
-                                        <Form.Label>Select Post</Form.Label>
-                                        <Form.Control value={this.state.selectedPostIDTBD}
-                                                      onChange={this.handlePostIDTBD} as="select">
-                                            {postListDropDownMenu}
-                                        </Form.Control>
-                                    </Form.Group>
-                                    <Button variant={'primary'}
-                                            disabled={(this.state.pageIsLoading)}
-                                            onClick={!(this.state.pageIsLoading) ? this.deletePost : null}>
-                                        {(this.state.pageIsLoading) ? <Spinner
-                                            as="span"
-                                            animation="grow"
-                                            size="sm"
-                                            role="status"
-                                            aria-hidden="true"
-                                        /> : ''}
-                                        {'Delete Post'}
-                                    </Button>
-                                </Form>
-                                <br/>
-                            </Card.Body>
-                        </Card>
+                        <br/>
+                        <post>
+                            <post-contents>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            <Form.Group controlId="deleteForm.pageName">
+                                                <Form.Label>Select Page</Form.Label>
+                                                <Form.Control value={this.state.selectedPageIDTBD}
+                                                              onChange={this.handlePageIDTBD} as="select">
+                                                    {pageListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            <Button variant={'primary'}
+                                                    disabled={(this.state.pageIsLoading)}
+                                                    onClick={!(this.state.pageIsLoading) ? this.deletePage : null}>
+                                                {(this.state.pageIsLoading) ? <Spinner
+                                                    as="span"
+                                                    animation="grow"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                /> : ''}
+                                                {'Delete Page'}
+                                            </Button>
+                                            <Form.Group controlId="deleteForm.postName">
+                                                <Form.Label>Select Post</Form.Label>
+                                                <Form.Control value={this.state.selectedPostIDTBD}
+                                                              onChange={this.handlePostIDTBD} as="select">
+                                                    {postListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            <Button variant={'primary'}
+                                                    disabled={(this.state.pageIsLoading)}
+                                                    onClick={!(this.state.pageIsLoading) ? this.deletePost : null}>
+                                                {(this.state.pageIsLoading) ? <Spinner
+                                                    as="span"
+                                                    animation="grow"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                /> : ''}
+                                                {'Delete Post'}
+                                            </Button>
+                                        </Form>
+                                    </Col>
+                                </Row>
+                            </post-contents>
+                        </post>
                     </Tab>
                     <Tab eventKey="user"
                          title='Edit Users'>
-                        <Card>
-                            <Card.Header>Add User</Card.Header>
-                            <Card.Body>
-                                <Form>
-                                    <Form.Group controlId="userForm.Name">
-                                        <Form.Label>User Name</Form.Label>
-                                        <Form.Control value={this.state.userName} onChange={this.handleUserNameChange}
-                                                      type="name" placeholder="username...."/>
-                                    </Form.Group>
-                                    <Form.Group controlId="group.Name">
-                                        <Form.Label>Group</Form.Label>
-                                        <Form.Control value={this.state.groupName} onChange={this.handleGroupChange}
-                                                      type="name" placeholder="wheel = admin...."/>
-                                    </Form.Group>
-                                    <Form.Group controlId="secondaryGroup.Name">
-                                        <Form.Label>Secondary Group</Form.Label>
-                                        <Form.Control value={this.state.secondaryGroup}
-                                                      onChange={this.handleSecondaryGroupChange}
-                                                      type="name" placeholder="extra groups...."/>
-                                    </Form.Group>
-                                    <Form.Group controlId="password.Name">
-                                        <Form.Label>Password</Form.Label>
-                                        <Form.Control value={this.state.userPassword}
-                                                      onChange={this.handlePasswordChange}
-                                                      type="name" placeholder="password...."/>
-                                    </Form.Group>
-                                </Form>
+                        <br/>
+                        <post>
+                            <post-contents>
+                                <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            <Form.Group controlId="userForm.Name">
+                                                <Form.Label>User Name</Form.Label>
+                                                <Form.Control value={this.state.userName}
+                                                              onChange={this.handleUserNameChange}
+                                                              type="name" placeholder="username...."/>
+                                            </Form.Group>
+                                            <Form.Group controlId="group.Name">
+                                                <Form.Label>Group</Form.Label>
+                                                <Form.Control value={this.state.groupName}
+                                                              onChange={this.handleGroupChange}
+                                                              type="name" placeholder="wheel = admin...."/>
+                                            </Form.Group>
+                                            <Form.Group controlId="secondaryGroup.Name">
+                                                <Form.Label>Secondary Group</Form.Label>
+                                                <Form.Control value={this.state.secondaryGroup}
+                                                              onChange={this.handleSecondaryGroupChange}
+                                                              type="name" placeholder="extra groups...."/>
+                                            </Form.Group>
+                                            <Form.Group controlId="password.Name">
+                                                <Form.Label>Password</Form.Label>
+                                                <Form.Control value={this.state.userPassword}
+                                                              onChange={this.handlePasswordChange}
+                                                              type="name" placeholder="password...."/>
+                                            </Form.Group>
+                                        </Form>
+                                    </Col>
+                                </Row>
                                 <Button variant={'primary'}
                                         disabled={(this.state.userIsLoading)}
                                         onClick={!(this.state.userIsLoading) ? this.addUser : null}>
@@ -725,14 +765,13 @@ class App extends Component {
                                     /> : ''}
                                     {'Add User'}
                                 </Button>
-                            </Card.Body>
-                        </Card>
+                            </post-contents>
+                        </post>
                     </Tab>
-
                 </Tabs>
-            </Container>
-        );
-    }
-}
+                < /Container>
+                    )
+                    }
+                    }
+                    export default App;;
 
-export default App;
