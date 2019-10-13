@@ -54,7 +54,6 @@ class App extends Component {
         this.handlePageEditMode = this.handlePageEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
         this.updatePost = this.updatePost.bind(this);
-        this.createPage = this.createPage.bind(this);
         this.selectPageIcon = this.selectPageIcon.bind(this);
         this.selectPostIcon = this.selectPostIcon.bind(this);
         this.handlePageNameChange = this.handlePageNameChange.bind(this);
@@ -158,10 +157,6 @@ class App extends Component {
         this.setState({selectedPostIcon: icon.target.value});
     }
 
-    createPage() {
-
-    }
-
     // get pages list from server
     getPages() {
         this.setState({pageIsLoading: true});
@@ -172,7 +167,6 @@ class App extends Component {
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
                 }
-                console.log(lookup);
                 this.setState({pageList: data, pageListLookup: lookup});
             })
             .catch((error) => {
@@ -195,7 +189,6 @@ class App extends Component {
         this.setState({postIsLoading: true});
         fetch("/api/getPosts").then(response => response.json())
             .then((data) => {
-                console.log(data);
                 let lookup = {};
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
@@ -457,8 +450,8 @@ class App extends Component {
     }
 
     componentWillMount() {
-        //   this.getPosts(); // load our post and page list on load
-        //   this.getPages();
+        this.getPosts(); // load our post and page list on load
+        this.getPages();
         console.log(this.state);
     }
 
@@ -495,7 +488,7 @@ class App extends Component {
                     onSelect={key => this.setState({key})}
                 >
                     <Tab eventKey="editPost"
-                         title='Edit Post'>
+                         title={<FeatherIcon icon={"edit"}></FeatherIcon>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -605,7 +598,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="Page"
-                         title='Edit Page'>
+                         title={<FeatherIcon icon={"file-plus"}></FeatherIcon>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -667,7 +660,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="delete"
-                         title='Delete Post/Page'>
+                         title={<FeatherIcon icon={"file-minus"}></FeatherIcon>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -719,7 +712,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="user"
-                         title='Edit Users'>
+                         title={<FeatherIcon icon={"users"}></FeatherIcon>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -769,9 +762,10 @@ class App extends Component {
                         </post>
                     </Tab>
                 </Tabs>
-                < /Container>
-                    )
-                    }
-                    }
-                    export default App;;
+            </Container>
+        )
+    }
+}
+
+export default App;
 
