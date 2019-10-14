@@ -19,21 +19,24 @@ class App extends Component {
         super(props);
         this.state = {
             editPostBoolean: false,
-            eidtPageBoolean: false,
+            editPageBoolean: false,
             postIsLoading: false,
             pageIsLoading: false,
             selectedPageIcon: "camera",
             selectedPostIcon: "camera",
             pageList: [],
             postList: [],
+            userList: [],
             pageID: '',
             postContents: '',
             pageName: "Please enter a name...",
             postName: "Please enter a name...",
             selectedPageIDTBD: '',
             selectedPostIDTBD: '',
+            selectedUserIDTBD: '',
             selectedPageIDTBE: '',
             selectedPostIDTBE: '',
+            selectedUserIDTBE: '',
             pageListLookup: {},
             postListLookup: {},
             // username stuff
@@ -63,12 +66,15 @@ class App extends Component {
         this.loadData = this.loadData.bind(this);
         this.getPages = this.getPages.bind(this);
         this.getPosts = this.getPosts.bind(this);
+        this.getUsers = this.getUsers.bind(this);
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
+        this.handleUserIDTBD = this.handleUserIDTBD.bind(this);
         this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
         this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
+        this.deleteUser = this.deleteUser.bind(this);
     }
 
     handleUserNameChange(e) {
@@ -124,6 +130,7 @@ class App extends Component {
         const thisPost = this.state.postListLookup[thisPostID];
         if (typeof thisPost !== "undefined") {
             this.setState({
+                //TODO does the below entry need to be deleted? As setState happens twice for it.
                 selectedPostIDTBE: thisPostID,
                 postName: thisPost.name,
                 selectedPostIcon: thisPost.icon,
@@ -131,6 +138,19 @@ class App extends Component {
             })
         }
         this.setState({selectedPostIDTBE: thisPostID})
+    }
+
+    handleUserIDTBD(e) {
+        const thisUserID = e.target.value;
+        console.log("User ID: " +  thisUserID);
+        const thisUser= this.state.userListLookup[thisUserID];
+        console.log("User name: "  + thisUser.name);
+        if (typeof thisUser !== "undefined") {
+            this.setState({
+                userName: thisUser.name,
+            })
+        }
+        this.setState({selectedUserIDTBD: thisUserID})
     }
 
     handleEditorChange(content, editor) {
@@ -209,6 +229,32 @@ class App extends Component {
                 }
             })
     }
+
+    getUsers() {
+        this.setState({userIsLoading: true});
+        fetch("/api/getUsers").then(response => response.json())
+            .then((data) => {
+                let lookup = {};
+                for (let i = 0, len = data.length; i < len; i++) {
+                    lookup[data[i].id] = data[i];
+                }
+                this.setState({userList: data, userListLookup: lookup});
+            })
+            .catch((error) => {
+                alert(`${error} retrieving users failed.`)
+            })
+            .finally((data) => {
+                this.setState({userIsLoading: false});
+                if (this.state.userList.length > 0) {
+                    this.setState({
+                        userIsLoading: false,
+                        userID: this.state.userList[0].id,
+                        selectedUserIDTBD: this.state.userList[0].id
+                    }) // set our page id so drop down works
+                }
+            })
+    }
+
 
     loadData() {
         this.setState({pageIsLoading: true});
@@ -289,7 +335,7 @@ class App extends Component {
                 alert(`${error} adding user failed.`)
             })
             .finally((data) => {
-                this.setState({userIsLoading: false});
+                this.setState({userIsLoading: false}, () => this.getUsers());
             })
     }
 
@@ -449,15 +495,45 @@ class App extends Component {
             })
     }
 
+    deleteUser() {
+        this.setState({userIsLoading: true});
+        console.log(`User ID: ${this.state.userID}`);
+        let data = {
+            id: this.state.selectedUserIDTBD,
+            name: "On the chopping block."
+        };
+        fetch("/api/deleteUser",
+            {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+            .then((data) => {
+                if (data.success !== true) {
+                    alert("Unable to delete user." + data.errorMessage)
+                }
+            })
+            .catch((error) => {
+                alert(`${error} retrieving pages failed.`)
+            })
+            .finally((data) => {
+                this.getUsers();
+            })
+    }
+
     componentWillMount() {
         this.getPosts(); // load our post and page list on load
         this.getPages();
+        this.getUsers();
         console.log(this.state);
     }
 
     render() {
         const ourPages = this.state.pageList;
         const ourPosts = this.state.postList;
+        const ourUsers = this.state.userList;
 
         const pageListDropDownMenu = ourPages.map((_, index) => {
             return (
@@ -468,8 +544,15 @@ class App extends Component {
 
         const postListDropDownMenu = ourPosts.map((_, index) => {
             return (
-                <option>
+                <option
                     value={this.state.postList[index].id}>[{this.state.postList[index].id}] {this.state.postList[index].name}</option>
+            );
+        });
+
+        const userListDropDownMenu = ourUsers.map((_, index) => {
+            return (
+                <option
+                    value={this.state.userList[index].id}>[{this.state.userList[index].id}] {this.state.userList[index].name}</option>
             );
         });
 
@@ -704,6 +787,25 @@ class App extends Component {
                                                     aria-hidden="true"
                                                 /> : ''}
                                                 {'Delete Post'}
+                                            </Button>
+                                            <Form.Group controlId="deleteForm.userName">
+                                                <Form.Label>Select User</Form.Label>
+                                                <Form.Control value={this.state.selectedUserIDTBD}
+                                                              onChange={this.handleUserIDTBD} as="select">
+                                                    {userListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            <Button variant={'primary'}
+                                                    disabled={(this.state.userIsLoading)}
+                                                    onClick={!(this.state.userIsLoading) ? this.deleteUser : null}>
+                                                {(this.state.userIsLoading) ? <Spinner
+                                                    as="span"
+                                                    animation="grow"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                /> : ''}
+                                                {'Delete User'}
                                             </Button>
                                         </Form>
                                     </Col>
