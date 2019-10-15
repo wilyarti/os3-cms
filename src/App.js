@@ -307,9 +307,8 @@ class App extends Component {
                 this.getPages();
             })
     }
-
+    //TODO add missing fields.
     addUser() {
-
         this.setState({userIsLoading: true});
         let data = {
             name: this.state.userName,
