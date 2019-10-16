@@ -15,6 +15,8 @@ import {Editor} from '@tinymce/tinymce-react';
 import IconList from './icons'
 
 class App extends Component {
+    errorMessage;
+
     constructor(props) {
         super(props);
         this.state = {
@@ -41,14 +43,28 @@ class App extends Component {
             postListLookup: {},
             // username stuff
             userIsLoading: false,
-            userName: '',
-            groupName: '',
-            secondaryGroup: '',
-            userPassword: ''
+            user: {
+                disabled: false,
+                createdTime: new Date(),
+                username: '',
+                firstName: '',
+                lastName: '',
+                streetAddress: '',
+                postCode: '',
+                country: '',
+                countryCode: '',
+                email: '',
+                mobile: '',
+                areaCode: '',
+                group: '',
+                secondaryGroup: '',
+                password: '',
+                metadata: ''
+            },
         };
 
         this.addUser = this.addUser.bind(this);
-        this.handleUserNameChange = this.handleUserNameChange.bind(this);
+        this.handleUserFormChange = this.handleUserFormChange.bind(this);
         this.handleGroupChange = this.handleGroupChange.bind(this);
         this.handleSecondaryGroupChange = this.handleSecondaryGroupChange.bind(this);
         this.handlePasswordChange = this.handlePasswordChange.bind(this);
@@ -77,8 +93,12 @@ class App extends Component {
         this.deleteUser = this.deleteUser.bind(this);
     }
 
-    handleUserNameChange(e) {
-        this.setState({userName: e.target.value})
+    // Use the .name field to dynamically handle all field values...
+    // This way we can use one handler for the whole form group.
+    handleUserFormChange(e) {
+        let user = this.state.user;
+        user[e.target.name] = e.target.value;
+        this.setState({user})
     }
 
     handleGroupChange(e) {
@@ -142,9 +162,9 @@ class App extends Component {
 
     handleUserIDTBD(e) {
         const thisUserID = e.target.value;
-        console.log("User ID: " +  thisUserID);
-        const thisUser= this.state.userListLookup[thisUserID];
-        console.log("User name: "  + thisUser.name);
+        console.log("User ID: " + thisUserID);
+        const thisUser = this.state.userListLookup[thisUserID];
+        console.log("User name: " + thisUser.name);
         if (typeof thisUser !== "undefined") {
             this.setState({
                 userName: thisUser.name,
@@ -182,7 +202,10 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         fetch("/api/getPages").then(response => response.json())
             .then((data) => {
-                console.log(data);
+                if (data.success == false) {
+                    alert(data.errorMessage);
+                    return
+                }
                 let lookup = {};
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
@@ -209,6 +232,10 @@ class App extends Component {
         this.setState({postIsLoading: true});
         fetch("/api/getPosts").then(response => response.json())
             .then((data) => {
+                if (data.success == false) {
+                    alert(data.errorMessage);
+                    return
+                }
                 let lookup = {};
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
@@ -234,6 +261,10 @@ class App extends Component {
         this.setState({userIsLoading: true});
         fetch("/api/getUsers").then(response => response.json())
             .then((data) => {
+                if (data.success == false) {
+                    alert(data.errorMessage);
+                    return
+                }
                 let lookup = {};
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
@@ -281,6 +312,7 @@ class App extends Component {
             return;
         }
         this.setState({pageIsLoading: true});
+        //TODO fill in empty fields
         let data = {
             username: this.state.pageName,
             icon: this.state.selectedPageIcon,
@@ -307,16 +339,11 @@ class App extends Component {
                 this.getPages();
             })
     }
+
     //TODO add missing fields.
     addUser() {
         this.setState({userIsLoading: true});
-        let data = {
-            username: this.state.userName,
-            group: this.state.groupName,
-            secondaryGroup: this.state.secondaryGroup,
-            password: this.state.userPassword,
-            metadata: "this is the metadata"
-        };
+        let data = this.state.user;
         fetch("/api/addUser",
             {
                 method: 'POST', // or 'PUT'
@@ -340,7 +367,7 @@ class App extends Component {
 
     updatePage() {
         this.setState({pageIsLoading: true});
-        var data = {
+        let data = {
             id: this.state.selectedPageIDTBE,
             username: this.state.pageName,
             pageID: this.state.pageID,
@@ -817,36 +844,114 @@ class App extends Component {
                         <br/>
                         <post>
                             <post-contents>
-                                <Row>
-                                    <Col lg={4} xs={12}>
-                                        <Form>
-                                            <Form.Group controlId="userForm.Name">
-                                                <Form.Label>User Name</Form.Label>
-                                                <Form.Control value={this.state.userName}
-                                                              onChange={this.handleUserNameChange}
-                                                              type="name" placeholder="username...."/>
-                                            </Form.Group>
-                                            <Form.Group controlId="group.Name">
-                                                <Form.Label>Group</Form.Label>
-                                                <Form.Control value={this.state.groupName}
-                                                              onChange={this.handleGroupChange}
-                                                              type="name" placeholder="wheel = admin...."/>
-                                            </Form.Group>
-                                            <Form.Group controlId="secondaryGroup.Name">
-                                                <Form.Label>Secondary Group</Form.Label>
-                                                <Form.Control value={this.state.secondaryGroup}
-                                                              onChange={this.handleSecondaryGroupChange}
-                                                              type="name" placeholder="extra groups...."/>
-                                            </Form.Group>
-                                            <Form.Group controlId="password.Name">
-                                                <Form.Label>Password</Form.Label>
-                                                <Form.Control value={this.state.userPassword}
-                                                              onChange={this.handlePasswordChange}
-                                                              type="name" placeholder="password...."/>
-                                            </Form.Group>
-                                        </Form>
-                                    </Col>
-                                </Row>
+                                <Form>
+                                    <Form.Row>
+                                        <Form.Group as={Col} md="4" controlId="userForm.name">
+                                            <Form.Label>User Name</Form.Label>
+                                            <Form.Control name="username" value={this.state.user.username}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="username...."/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.firstName">
+                                            <Form.Label>First Name</Form.Label>
+                                            <Form.Control name="firstName" value={this.state.user.firstName}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="Joe"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.lastName">
+                                            <Form.Label>Last Name</Form.Label>
+                                            <Form.Control name="lastName" value={this.state.user.lastName}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="Smith"/>
+                                        </Form.Group>
+
+                                    </Form.Row>
+                                    <Form.Row>
+                                        <Form.Group as={Col} md="4" controlId="userForm.streetAddress">
+                                            <Form.Label>Street Address</Form.Label>
+                                            <Form.Control name="streetAddress" value={this.state.user.streetAddress}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="123 Retro Corry Road"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.postCode">
+                                            <Form.Label>Post Code</Form.Label>
+                                            <Form.Control name="postCode" value={this.state.user.postCode}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="4720"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.country">
+                                            <Form.Label>Country</Form.Label>
+                                            <Form.Control name="country" value={this.state.user.country}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="Australia"/>
+                                        </Form.Group>
+                                    </Form.Row>
+
+                                    <Form.Row>
+                                        <Form.Group as={Col} md="4" controlId="userForm.countryCode">
+                                            <Form.Label>Country Code</Form.Label>
+                                            <Form.Control name="countryCode" value={this.state.user.countryCode}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="AU"/>
+                                        </Form.Group>
+
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.email">
+                                            <Form.Label>E-mail</Form.Label>
+                                            <Form.Control name="email" value={this.state.user.email}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="joe@mail.com"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.mobile">
+                                            <Form.Label>Mobile</Form.Label>
+                                            <Form.Control name="mobile" value={this.state.user.mobile}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="041234567"/>
+                                        </Form.Group>
+                                    </Form.Row>
+                                    <Form.Row>
+                                        <Form.Group as={Col} md="4" controlId="userForm.areaCode">
+                                            <Form.Label>Area Code</Form.Label>
+                                            <Form.Control name="areaCode" value={this.state.user.areaCode}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="+61"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.group">
+                                            <Form.Label>Group</Form.Label>
+                                            <Form.Control name="group" value={this.state.user.group}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="wheel = superuser"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.secondaryGroup">
+                                            <Form.Label>Secondary Group</Form.Label>
+                                            <Form.Control name="secondaryGroup" value={this.state.user.secondaryGroup}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="kettlebell"/>
+                                        </Form.Group>
+                                    </Form.Row>
+                                    <Form.Row>
+                                        <Form.Group as={Col} md="4" controlId="userForm.password">
+                                            <Form.Label>Password</Form.Label>
+                                            <Form.Control name="password" value={this.state.user.password}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="password1234"/>
+                                        </Form.Group>
+
+                                        <Form.Group as={Col} md="4" controlId="userForm.metadata">
+                                            <Form.Label>Metadata</Form.Label>
+                                            <Form.Control name="metadata" value={this.state.user.metadata}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="{}"/>
+                                        </Form.Group>
+                                    </Form.Row>
+                                </Form>
                                 <Button variant={'primary'}
                                         disabled={(this.state.userIsLoading)}
                                         onClick={!(this.state.userIsLoading) ? this.addUser : null}>
