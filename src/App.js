@@ -281,8 +281,8 @@ class App extends Component {
             return;
         }
         this.setState({pageIsLoading: true});
-        var data = {
-            name: this.state.pageName,
+        let data = {
+            username: this.state.pageName,
             icon: this.state.selectedPageIcon,
             createdTime: new Date()
         };
@@ -311,7 +311,7 @@ class App extends Component {
     addUser() {
         this.setState({userIsLoading: true});
         let data = {
-            name: this.state.userName,
+            username: this.state.userName,
             group: this.state.groupName,
             secondaryGroup: this.state.secondaryGroup,
             password: this.state.userPassword,
@@ -342,7 +342,7 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         var data = {
             id: this.state.selectedPageIDTBE,
-            name: this.state.pageName,
+            username: this.state.pageName,
             pageID: this.state.pageID,
             icon: this.state.selectedPageIcon,
             createdTime: new Date(),
@@ -372,9 +372,9 @@ class App extends Component {
 
     updatePost() {
         this.setState({postIsLoading: true});
-        var data = {
+        let data = {
             id: this.state.selectedPostIDTBE,
-            name: this.state.postName,
+            username: this.state.postName,
             pageID: this.state.pageID,
             icon: this.state.selectedPostIcon,
             createdTime: new Date(),
@@ -411,7 +411,7 @@ class App extends Component {
         console.log("Adding post");
         this.setState({postIsLoading: true});
         let data = {
-            name: this.state.postName,
+            username: this.state.postName,
             pageID: this.state.pageID,
             icon: this.state.selectedPostIcon,
             createdTime: new Date(),
@@ -499,7 +499,7 @@ class App extends Component {
         console.log(`User ID: ${this.state.userID}`);
         let data = {
             id: this.state.selectedUserIDTBD,
-            name: "On the chopping block."
+            username: "On the chopping block."
         };
         fetch("/api/deleteUser",
             {
