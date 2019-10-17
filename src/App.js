@@ -44,22 +44,28 @@ class App extends Component {
             postListLookup: {},
             // username stuff
             userIsLoading: false,
+            userEditBoolean: false,
             user: {
+                // NOT NULLABLE entries
+                id: '',
                 disabled: false,
                 createdTime: new Date(),
-                username: '',
+                group: 'user',
+                password: 'password1234',
+                username: 'exampleUser',
+                // NULLABLE entries
                 firstName: '',
                 lastName: '',
                 streetAddress: '',
                 postCode: '',
+                state: '',
                 country: '',
                 countryCode: '',
+                language: '',
                 email: '',
-                mobile: '',
                 areaCode: '',
-                group: '',
+                mobile: '',
                 secondaryGroup: '',
-                password: '',
                 metadata: ''
             },
         };
@@ -72,6 +78,7 @@ class App extends Component {
         this.addPage = this.addPage.bind(this);
         this.handlePostEditMode = this.handlePostEditMode.bind(this);
         this.handlePageEditMode = this.handlePageEditMode.bind(this);
+        this.handleUserEditMode = this.handleUserEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
         this.updatePost = this.updatePost.bind(this);
         this.selectPageIcon = this.selectPageIcon.bind(this);
@@ -86,12 +93,14 @@ class App extends Component {
         this.getUsers = this.getUsers.bind(this);
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
-        this.handleUserIDTBD = this.handleUserIDTBD.bind(this);
         this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
         this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
+        this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
         this.deletePage = this.deletePage.bind(this);
         this.deletePost = this.deletePost.bind(this);
         this.deleteUser = this.deleteUser.bind(this);
+
+        this.handleDisableUser = this.handleDisableUser.bind(this);
     }
 
     // Use the .name field to dynamically handle all field values...
@@ -124,6 +133,12 @@ class App extends Component {
         this.setState({editPageBoolean: newEditMode})
     }
 
+    handleUserEditMode() {
+        const newEditMode = !this.state.editUserBoolean;
+        let user = this.state.userList[0];
+        this.setState({editUserBoolean: newEditMode, user})
+    }
+
     handlePageIDTBD(e) {
         this.setState({selectedPageIDTBD: e.target.value})
     }
@@ -151,8 +166,6 @@ class App extends Component {
         const thisPost = this.state.postListLookup[thisPostID];
         if (typeof thisPost !== "undefined") {
             this.setState({
-                //TODO does the below entry need to be deleted? As setState happens twice for it.
-                selectedPostIDTBE: thisPostID,
                 postName: thisPost.name,
                 selectedPostIcon: thisPost.icon,
                 postContents: thisPost.contents
@@ -161,17 +174,25 @@ class App extends Component {
         this.setState({selectedPostIDTBE: thisPostID})
     }
 
-    handleUserIDTBD(e) {
+    handleUserIDTBE(e) {
         const thisUserID = e.target.value;
         console.log("User ID: " + thisUserID);
         const thisUser = this.state.userListLookup[thisUserID];
-        console.log("User name: " + thisUser.name);
+        console.log("User name: " + thisUser.username);
+        let user = this.state.user;
         if (typeof thisUser !== "undefined") {
             this.setState({
-                userName: thisUser.name,
-            })
+                user: this.state.userListLookup[thisUserID]
+            }, () => (console.log(this.state)))
         }
-        this.setState({selectedUserIDTBD: thisUserID})
+        this.setState({selectedUserIDTBE: thisUserID})
+    }
+
+    handleDisableUser() {
+        const newDisabledMode = !this.state.user.disabled;
+        let user = this.state.user;
+        user.disabled = newDisabledMode;
+        this.setState({user})
     }
 
     handleEditorChange(content, editor) {
@@ -281,7 +302,8 @@ class App extends Component {
                     this.setState({
                         userIsLoading: false,
                         userID: this.state.userList[0].id,
-                        selectedUserIDTBD: this.state.userList[0].id
+                        selectedUserIDTBD: this.state.userList[0].id,
+                        selectedUserIDTBE: this.state.userList[0].id
                     }) // set our page id so drop down works
                 }
             })
@@ -345,8 +367,12 @@ class App extends Component {
     //TODO add missing fields.
     addUser() {
         this.setState({userIsLoading: true});
+        const editMode = this.state.editUserBoolean
         let data = this.state.user;
-        fetch("/api/addUser",
+        data.createdTime = new Date();
+        data.timeZone = moment.tz.guess();
+        let request =  (editMode) ? "/api/updateUser"  : "/api/addUser";
+        fetch(request,
             {
                 method: 'POST', // or 'PUT'
                 body: JSON.stringify(data), // data can be `string` or {object}!
@@ -581,7 +607,7 @@ class App extends Component {
         const userListDropDownMenu = ourUsers.map((_, index) => {
             return (
                 <option
-                    value={this.state.userList[index].id}>[{this.state.userList[index].id}] {this.state.userList[index].name}</option>
+                    value={this.state.userList[index].id}>[{this.state.userList[index].id}] {this.state.userList[index].username}</option>
             );
         });
 
@@ -817,25 +843,6 @@ class App extends Component {
                                                 /> : ''}
                                                 {'Delete Post'}
                                             </Button>
-                                            <Form.Group controlId="deleteForm.userName">
-                                                <Form.Label>Select User</Form.Label>
-                                                <Form.Control value={this.state.selectedUserIDTBD}
-                                                              onChange={this.handleUserIDTBD} as="select">
-                                                    {userListDropDownMenu}
-                                                </Form.Control>
-                                            </Form.Group>
-                                            <Button variant={'primary'}
-                                                    disabled={(this.state.userIsLoading)}
-                                                    onClick={!(this.state.userIsLoading) ? this.deleteUser : null}>
-                                                {(this.state.userIsLoading) ? <Spinner
-                                                    as="span"
-                                                    animation="grow"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden="true"
-                                                /> : ''}
-                                                {'Delete User'}
-                                            </Button>
                                         </Form>
                                     </Col>
                                 </Row>
@@ -848,6 +855,18 @@ class App extends Component {
                         <post>
                             <post-contents>
                                 <Form>
+                                    <Form.Row>
+                                        {this.state.editUserBoolean &&
+                                        <Form.Group controlId="userForm.selectUser">
+                                            <Form.Label>Select User</Form.Label>
+                                            <Form.Control
+                                                value={this.state.selectedUserIDTBE}
+                                                onChange={this.handleUserIDTBE} as="select">
+                                                {userListDropDownMenu}
+                                            </Form.Control>
+                                        </Form.Group>
+                                        }
+                                    </Form.Row>
                                     <Form.Row>
                                         <Form.Group as={Col} md="4" controlId="userForm.name">
                                             <Form.Label>User Name</Form.Label>
@@ -879,37 +898,45 @@ class App extends Component {
                                                           placeholder="123 Retro Corry Road"/>
                                         </Form.Group>
 
-                                        <Form.Group as={Col} md="4" controlId="userForm.postCode">
+                                        <Form.Group as={Col} md="2" controlId="userForm.postCode">
                                             <Form.Label>Post Code</Form.Label>
                                             <Form.Control name="postCode" value={this.state.user.postCode}
                                                           onChange={this.handleUserFormChange}
                                                           placeholder="4720"/>
                                         </Form.Group>
-
-                                        <Form.Group as={Col} md="4" controlId="userForm.country">
+                                        <Form.Group as={Col} md="2" controlId="userForm.state">
+                                            <Form.Label>State</Form.Label>
+                                            <Form.Control name="state" value={this.state.user.state}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="QLD"/>
+                                        </Form.Group>
+                                        <Form.Group as={Col} md="2" controlId="userForm.country">
                                             <Form.Label>Country</Form.Label>
                                             <Form.Control name="country" value={this.state.user.country}
                                                           onChange={this.handleUserFormChange}
                                                           placeholder="Australia"/>
                                         </Form.Group>
+                                        <Form.Group as={Col} md="2" controlId="userForm.countryCode">
+                                        <Form.Label>Code</Form.Label>
+                                        <Form.Control name="countryCode" value={this.state.user.countryCode}
+                                                      onChange={this.handleUserFormChange}
+                                                      placeholder="AU"/>
+                                    </Form.Group>
                                     </Form.Row>
 
                                     <Form.Row>
-                                        <Form.Group as={Col} md="4" controlId="userForm.countryCode">
-                                            <Form.Label>Country Code</Form.Label>
-                                            <Form.Control name="countryCode" value={this.state.user.countryCode}
-                                                          onChange={this.handleUserFormChange}
-                                                          placeholder="AU"/>
-                                        </Form.Group>
-
-
                                         <Form.Group as={Col} md="4" controlId="userForm.email">
                                             <Form.Label>E-mail</Form.Label>
                                             <Form.Control name="email" value={this.state.user.email}
                                                           onChange={this.handleUserFormChange}
                                                           placeholder="joe@mail.com"/>
                                         </Form.Group>
-
+                                        <Form.Group as={Col} md="2" controlId="userForm.areaCode">
+                                            <Form.Label>Area Code</Form.Label>
+                                            <Form.Control name="areaCode" value={this.state.user.areaCode}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="+61"/>
+                                        </Form.Group>
                                         <Form.Group as={Col} md="4" controlId="userForm.mobile">
                                             <Form.Label>Mobile</Form.Label>
                                             <Form.Control name="mobile" value={this.state.user.mobile}
@@ -918,13 +945,6 @@ class App extends Component {
                                         </Form.Group>
                                     </Form.Row>
                                     <Form.Row>
-                                        <Form.Group as={Col} md="4" controlId="userForm.areaCode">
-                                            <Form.Label>Area Code</Form.Label>
-                                            <Form.Control name="areaCode" value={this.state.user.areaCode}
-                                                          onChange={this.handleUserFormChange}
-                                                          placeholder="+61"/>
-                                        </Form.Group>
-
                                         <Form.Group as={Col} md="4" controlId="userForm.group">
                                             <Form.Label>Group</Form.Label>
                                             <Form.Control name="group" value={this.state.user.group}
@@ -954,6 +974,24 @@ class App extends Component {
                                                           placeholder="{}"/>
                                         </Form.Group>
                                     </Form.Row>
+                                    <Form.Row>
+                                        <Form>
+                                            <Form.Group controlId="formBasicCheckbox">
+                                                <Form.Check type="checkbox" label="Edit Mode"
+                                                            value={this.state.userEditBoolean}
+                                                            onChange={this.handleUserEditMode}>
+                                                </Form.Check>
+                                            </Form.Group>
+                                        </Form>
+                                        <Form>
+                                            <Form.Group controlId="formBasicCheckbox">
+                                                <Form.Check type="checkbox" label="Disabled"
+                                                            value={this.state.user.disabled}
+                                                            onChange={this.handleDisableUser}>
+                                                </Form.Check>
+                                            </Form.Group>
+                                        </Form>
+                                    </Form.Row>
                                 </Form>
                                 <Button variant={'primary'}
                                         disabled={(this.state.userIsLoading)}
@@ -965,7 +1003,7 @@ class App extends Component {
                                         role="status"
                                         aria-hidden="true"
                                     /> : ''}
-                                    {'Add User'}
+                                    {this.state.editUserBoolean ? 'Update' : 'Add User'}
                                 </Button>
                             </post-contents>
                         </post>
