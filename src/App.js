@@ -13,6 +13,7 @@ import Spinner from 'react-bootstrap/Spinner';
 import FeatherIcon from 'feather-icons-react';
 import {Editor} from '@tinymce/tinymce-react';
 import IconList from './icons'
+import moment from "moment-timezone";
 
 class App extends Component {
     errorMessage;
@@ -314,9 +315,10 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         //TODO fill in empty fields
         let data = {
-            username: this.state.pageName,
+            name: this.state.pageName,
             icon: this.state.selectedPageIcon,
-            createdTime: new Date()
+            createdTime: new Date(),
+            timeZone: moment.tz.guess(),
         };
         fetch("/api/addPage",
             {
@@ -438,10 +440,11 @@ class App extends Component {
         console.log("Adding post");
         this.setState({postIsLoading: true});
         let data = {
-            username: this.state.postName,
+            name: this.state.postName,
             pageID: this.state.pageID,
             icon: this.state.selectedPostIcon,
             createdTime: new Date(),
+            timeZone: moment.tz.guess(),
             contents: this.state.postContents
         };
         fetch("/api/addPost",
