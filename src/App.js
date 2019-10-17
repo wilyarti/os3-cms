@@ -4,6 +4,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
+import FormCheck from 'react-bootstrap/FormCheck'
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Tab from 'react-bootstrap/Tab';
@@ -45,9 +46,10 @@ class App extends Component {
             // username stuff
             userIsLoading: false,
             userEditBoolean: false,
+            userDisabledBoolean: false,
             user: {
                 // NOT NULLABLE entries
-                id: '',
+                id: 0,
                 disabled: false,
                 createdTime: new Date(),
                 group: 'user',
@@ -61,11 +63,11 @@ class App extends Component {
                 state: '',
                 country: '',
                 countryCode: '',
-                language: '',
+                language: 'ENGLISH',
                 email: '',
                 areaCode: '',
                 mobile: '',
-                secondaryGroup: '',
+                secondaryGroup: 0,
                 metadata: ''
             },
         };
@@ -108,6 +110,8 @@ class App extends Component {
     handleUserFormChange(e) {
         let user = this.state.user;
         user[e.target.name] = e.target.value;
+        console.log(this.state.user);
+        console.log(this.state.selectedUserIDTBE);
         this.setState({user})
     }
 
@@ -134,9 +138,8 @@ class App extends Component {
     }
 
     handleUserEditMode() {
-        const newEditMode = !this.state.editUserBoolean;
         let user = this.state.userList[0];
-        this.setState({editUserBoolean: newEditMode, user})
+        this.setState({editUserBoolean: !this.state.editUserBoolean, user})
     }
 
     handlePageIDTBD(e) {
@@ -174,24 +177,28 @@ class App extends Component {
         this.setState({selectedPostIDTBE: thisPostID})
     }
 
+    // Changes our form to edit users.
     handleUserIDTBE(e) {
         const thisUserID = e.target.value;
-        console.log("User ID: " + thisUserID);
-        const thisUser = this.state.userListLookup[thisUserID];
-        console.log("User name: " + thisUser.username);
-        let user = this.state.user;
-        if (typeof thisUser !== "undefined") {
+        const user = this.state.userListLookup[thisUserID];
+        console.log("User ID: " + user.id);
+        console.log("User name: " + user.username);
+        console.log("Disabled: " + user.disabled);
+        console.log("Checkbox state: " + this.state.userDisabledBoolean);
+
+        if (typeof user !== "undefined") {
             this.setState({
-                user: this.state.userListLookup[thisUserID]
-            }, () => (console.log(this.state)))
+                user,
+                userDisabledBoolean: user.disabled
+            })
         }
-        this.setState({selectedUserIDTBE: thisUserID})
+        this.setState({selectedUserIDTBE: thisUserID});
     }
 
+
     handleDisableUser() {
-        const newDisabledMode = !this.state.user.disabled;
-        let user = this.state.user;
-        user.disabled = newDisabledMode;
+        let user  = this.state.user;
+        user.disabled = !user.disabled;
         this.setState({user})
     }
 
@@ -298,12 +305,12 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({userIsLoading: false});
+                let selectedUserIDTBE = this.state.selectedUserIDTBE ? this.state.selectedUserIDTBE : this.state.userList[0].id;
+                let userID = this.state.userID ? this.state.userID : this.state.userList[0].id;
                 if (this.state.userList.length > 0) {
                     this.setState({
-                        userIsLoading: false,
-                        userID: this.state.userList[0].id,
-                        selectedUserIDTBD: this.state.userList[0].id,
-                        selectedUserIDTBE: this.state.userList[0].id
+                        userID,
+                        selectedUserIDTBE
                     }) // set our page id so drop down works
                 }
             })
@@ -371,7 +378,7 @@ class App extends Component {
         let data = this.state.user;
         data.createdTime = new Date();
         data.timeZone = moment.tz.guess();
-        let request =  (editMode) ? "/api/updateUser"  : "/api/addUser";
+        let request = (editMode) ? "/api/updateUser" : "/api/addUser";
         fetch(request,
             {
                 method: 'POST', // or 'PUT'
@@ -736,7 +743,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="Page"
-                         title={<FeatherIcon icon={"file-plus"}></FeatherIcon>}>
+                         title={<FeatherIcon icon={"file-plus"}/>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -917,11 +924,11 @@ class App extends Component {
                                                           placeholder="Australia"/>
                                         </Form.Group>
                                         <Form.Group as={Col} md="2" controlId="userForm.countryCode">
-                                        <Form.Label>Code</Form.Label>
-                                        <Form.Control name="countryCode" value={this.state.user.countryCode}
-                                                      onChange={this.handleUserFormChange}
-                                                      placeholder="AU"/>
-                                    </Form.Group>
+                                            <Form.Label>Code</Form.Label>
+                                            <Form.Control name="countryCode" value={this.state.user.countryCode}
+                                                          onChange={this.handleUserFormChange}
+                                                          placeholder="AU"/>
+                                        </Form.Group>
                                     </Form.Row>
 
                                     <Form.Row>
@@ -974,24 +981,14 @@ class App extends Component {
                                                           placeholder="{}"/>
                                         </Form.Group>
                                     </Form.Row>
-                                    <Form.Row>
-                                        <Form>
-                                            <Form.Group controlId="formBasicCheckbox">
-                                                <Form.Check type="checkbox" label="Edit Mode"
-                                                            value={this.state.userEditBoolean}
-                                                            onChange={this.handleUserEditMode}>
-                                                </Form.Check>
-                                            </Form.Group>
-                                        </Form>
-                                        <Form>
-                                            <Form.Group controlId="formBasicCheckbox">
-                                                <Form.Check type="checkbox" label="Disabled"
-                                                            value={this.state.user.disabled}
-                                                            onChange={this.handleDisableUser}>
-                                                </Form.Check>
-                                            </Form.Group>
-                                        </Form>
-                                    </Form.Row>
+                                </Form>
+                                <Form>
+                                    <Form.Check type="checkbox" label="Edit Mode"
+                                                value={this.state.userEditBoolean}
+                                                onChange={this.handleUserEditMode}/>
+                                    <Form.Check type="checkbox" label="Disable User"
+                                                checked={this.state.user.disabled}
+                                                onChange={this.handleDisableUser}/>
                                 </Form>
                                 <Button variant={'primary'}
                                         disabled={(this.state.userIsLoading)}
