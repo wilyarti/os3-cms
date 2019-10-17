@@ -26,15 +26,9 @@ class App extends Component {
             editPageBoolean: false,
             postIsLoading: false,
             pageIsLoading: false,
-            selectedPageIcon: "camera",
-            selectedPostIcon: "camera",
             pageList: [],
             postList: [],
             userList: [],
-            pageID: '',
-            postContents: '',
-            pageName: "Please enter a name...",
-            postName: "Please enter a name...",
             selectedPageIDTBD: '',
             selectedPostIDTBD: '',
             selectedUserIDTBD: '',
@@ -43,6 +37,22 @@ class App extends Component {
             selectedUserIDTBE: '',
             pageListLookup: {},
             postListLookup: {},
+            userListLookup: {},
+            page: {
+              name: 'Enter a name...',
+                pageID: '',
+                icon: '',
+                createdTime: new Date(),
+                timeZone: moment.tz.guess(),
+            },
+            post: {
+                name: "Please enter a name...",
+                pageID: '',
+                icon: "camera",
+                contents: '',
+                createdTime: new Date(),
+                timeZone: moment.tz.guess(),
+            },
             // username stuff
             userIsLoading: false,
             userEditBoolean: false,
@@ -74,25 +84,26 @@ class App extends Component {
 
         this.addUser = this.addUser.bind(this);
         this.handleUserFormChange = this.handleUserFormChange.bind(this);
-        this.handleGroupChange = this.handleGroupChange.bind(this);
-        this.handleSecondaryGroupChange = this.handleSecondaryGroupChange.bind(this);
-        this.handlePasswordChange = this.handlePasswordChange.bind(this);
+        this.handlePostFormChange  = this.handlePostFormChange.bind(this);
+        this.handlePageFormChange  = this.handlePageFormChange.bind(this);
+
         this.addPage = this.addPage.bind(this);
-        this.handlePostEditMode = this.handlePostEditMode.bind(this);
-        this.handlePageEditMode = this.handlePageEditMode.bind(this);
-        this.handleUserEditMode = this.handleUserEditMode.bind(this);
         this.addPost = this.addPost.bind(this);
         this.updatePost = this.updatePost.bind(this);
         this.selectPageIcon = this.selectPageIcon.bind(this);
         this.selectPostIcon = this.selectPostIcon.bind(this);
-        this.handlePageNameChange = this.handlePageNameChange.bind(this);
-        this.handlePostNameChange = this.handlePostNameChange.bind(this);
         this.handlePageID = this.handlePageID.bind(this);
         this.handleEditorChange = this.handleEditorChange.bind(this);
+
         this.loadData = this.loadData.bind(this);
         this.getPages = this.getPages.bind(this);
         this.getPosts = this.getPosts.bind(this);
         this.getUsers = this.getUsers.bind(this);
+
+        this.handlePostEditMode = this.handlePostEditMode.bind(this);
+        this.handlePageEditMode = this.handlePageEditMode.bind(this);
+        this.handleUserEditMode = this.handleUserEditMode.bind(this);
+
         this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
         this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
         this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
@@ -107,24 +118,33 @@ class App extends Component {
 
     // Use the .name field to dynamically handle all field values...
     // This way we can use one handler for the whole form group.
+    handlePostFormChange(e) {
+        let post = this.state.post;
+        post[e.target.name] = e.target.value;
+        console.log(this.state.post);
+        this.setState({post})
+    }
+    // Use the .name field to dynamically handle all field values...
+    // This way we can use one handler for the whole form group.
+    handlePageFormChange(e) {
+        let page = this.state.page;
+        page[e.target.name] = e.target.value;
+        console.log(this.state.page);
+        this.setState({page})
+    }
+
+    handleEditorChange(content, editor) {
+        this.setState({postContents: content});
+    }
+
+    // Use the .name field to dynamically handle all field values...
+    // This way we can use one handler for the whole form group.
     handleUserFormChange(e) {
         let user = this.state.user;
         user[e.target.name] = e.target.value;
         console.log(this.state.user);
         console.log(this.state.selectedUserIDTBE);
         this.setState({user})
-    }
-
-    handleGroupChange(e) {
-        this.setState({groupName: e.target.value})
-    }
-
-    handleSecondaryGroupChange(e) {
-        this.setState({secondaryGroup: e.target.value})
-    }
-
-    handlePasswordChange(e) {
-        this.setState({userPassword: e.target.value})
     }
 
     handlePostEditMode() {
@@ -152,13 +172,11 @@ class App extends Component {
 
     handlePageIDTBE(e) {
         const thisPageID = e.target.value;
-        const thisPage = this.state.pageListLookup[thisPageID];
-        if (typeof thisPage !== "undefined") {
+        const page = this.state.pageListLookup[thisPageID];
+        console.log(page);
+        if (typeof page !== "undefined") {
             this.setState({
-                selectedPageIDTBE: thisPageID,
-                pageName: thisPage.name,
-                selectedPageIcon: thisPage.icon,
-                pageContents: thisPage.contents
+                page
             })
         }
         this.setState({selectedPageIDTBE: thisPageID})
@@ -166,12 +184,11 @@ class App extends Component {
 
     handlePostIDTBE(e) {
         const thisPostID = e.target.value;
-        const thisPost = this.state.postListLookup[thisPostID];
-        if (typeof thisPost !== "undefined") {
+        const post = this.state.postListLookup[thisPostID];
+        console.log(post);
+        if (typeof post !== "undefined") {
             this.setState({
-                postName: thisPost.name,
-                selectedPostIcon: thisPost.icon,
-                postContents: thisPost.contents
+                post
             })
         }
         this.setState({selectedPostIDTBE: thisPostID})
@@ -200,18 +217,6 @@ class App extends Component {
         let user  = this.state.user;
         user.disabled = !user.disabled;
         this.setState({user})
-    }
-
-    handleEditorChange(content, editor) {
-        this.setState({postContents: content});
-    }
-
-    handlePageNameChange(e) {
-        this.setState({pageName: e.target.value})
-    }
-
-    handlePostNameChange(e) {
-        this.setState({postName: e.target.value});
     }
 
     handlePageID(e) {
@@ -344,8 +349,8 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         //TODO fill in empty fields
         let data = {
-            name: this.state.pageName,
-            icon: this.state.selectedPageIcon,
+            name: this.state.page.name,
+            icon: this.state.page.icon,
             createdTime: new Date(),
             timeZone: moment.tz.guess(),
         };
@@ -374,7 +379,7 @@ class App extends Component {
     //TODO add missing fields.
     addUser() {
         this.setState({userIsLoading: true});
-        const editMode = this.state.editUserBoolean
+        const editMode = this.state.editUserBoolean;
         let data = this.state.user;
         data.createdTime = new Date();
         data.timeZone = moment.tz.guess();
@@ -473,12 +478,11 @@ class App extends Component {
         console.log("Adding post");
         this.setState({postIsLoading: true});
         let data = {
-            name: this.state.postName,
-            pageID: this.state.pageID,
-            icon: this.state.selectedPostIcon,
+            name: this.state.post.name,
+            icon: this.state.post.icon,
+            contents: this.state.post.contents,
             createdTime: new Date(),
             timeZone: moment.tz.guess(),
-            contents: this.state.postContents
         };
         fetch("/api/addPost",
             {
@@ -638,9 +642,23 @@ class App extends Component {
                         <post>
                             <post-contents>
                                 <Row>
+                                    <Col lg={4} xs={12}>
+                                        <Form>
+                                            {this.state.editPostBoolean &&
+                                            <Form.Group controlId="selectpost.postName">
+                                                <Form.Label>Select Post</Form.Label>
+                                                <Form.Control
+                                                    value={this.state.selectedPostIDTBE}
+                                                    onChange={this.handlePostIDTBE} as="select">
+                                                    {postListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            }
+                                        </Form>
+                                    </Col>
                                     <Col xs={12}>
                                         <Editor
-                                            value={this.state.postContents}
+                                            value={this.state.post.contents}
                                             onEditorChange={this.handleEditorChange}
                                             initialValue="<p>This is the initial content of the editor</p>"
                                             init={{
@@ -661,52 +679,35 @@ class App extends Component {
                                 <Row>
                                     <Col lg={4} xs={12}>
                                         <Form>
-
                                             <Form.Group controlId="postForm.Edit">
                                                 <Form.Label>Post Name</Form.Label>
-                                                <Form.Control value={this.state.postName}
-                                                              onChange={this.handlePostNameChange}
+                                                <Form.Control value={this.state.post.name} name="name"
+                                                              onChange={this.handlePostFormChange}
                                                               type="name" placeholder="Example post name...."/>
                                             </Form.Group>
                                         </Form>
                                     </Col>
-
-                                    <Col lg={4} xs={12}>
-                                        <Form>
-                                            {this.state.editPostBoolean &&
-                                            <Form.Group controlId="deleteForm.postName">
-                                                <Form.Label>Select Post</Form.Label>
-                                                <Form.Control
-                                                    value={this.state.selectedPostIDTBE}
-                                                    onChange={this.handlePostIDTBE} as="select">
-                                                    {postListDropDownMenu}
-                                                </Form.Control>
-                                            </Form.Group>
-                                            }
-                                        </Form>
-                                    </Col>
-
-                                </Row>
-                                <Row>
                                     <Col lg={4} xs={12}>
                                         <Form>
 
                                             <Form.Group controlId="PostForm.ParentID">
                                                 <Form.Label>Parent Page ID</Form.Label>
-                                                <Form.Control value={this.state.pageID} onChange={this.handlePageID}
+                                                <Form.Control value={this.state.post.pageID} name="pageID" onChange={this.handlePostFormChange}
                                                               as="select">
                                                     {pageListDropDownMenu}
                                                 </Form.Control>
                                             </Form.Group>
                                         </Form>
                                     </Col>
+                                </Row>
+                                <Row>
                                     <Col lg={4} xs={12}>
                                         <Form>
                                             <Form.Group controlId="PostForm.Icon">
-                                                <Form.Label>Page Icon <FeatherIcon
-                                                    icon={this.state.selectedPostIcon}/></Form.Label>
-                                                <Form.Control onChange={this.selectPostIcon.bind(this)}
-                                                              value={this.state.selectedPostIcon} as="select">
+                                                <Form.Label>Post Icon <FeatherIcon
+                                                    icon={this.state.user.icon}/></Form.Label>
+                                                <Form.Control onChange={this.handlePostFormChange} name="icon"
+                                                              value={this.state.user.icon} as="select">
                                                     {IconOptionList}
                                                 </Form.Control>
                                             </Form.Group>
@@ -724,6 +725,8 @@ class App extends Component {
                                             </Form.Group>
                                         </Form>
                                     </Col>
+                                </Row>
+                                <Row>
                                     <Col lg={4} xs={12}>
                                         <Button variant={'primary'}
                                                 disabled={(this.state.postIsLoading)}
@@ -749,33 +752,34 @@ class App extends Component {
                             <post-contents>
                                 <Row>
                                     <Col lg={4} xs={12}>
+                                        {this.state.editPageBoolean &&
+                                        <Form.Group controlId="deleteForm.pageName">
+                                            <Form.Label>Select Page</Form.Label>
+                                            <Form.Control
+                                                value={this.state.selectedPageIDTBE}
+                                                onChange={this.handlePageIDTBE} as="select">
+                                                {pageListDropDownMenu}
+                                            </Form.Control>
+                                        </Form.Group>
+                                        }
                                         <Form>
                                             <Form.Group controlId="pageForm.Name">
-                                                <Form.Label>Post Name</Form.Label>
-                                                <Form.Control value={this.state.pageName}
-                                                              onChange={this.handlePageNameChange}
-                                                              type="name" placeholder="Example post name...."/>
+                                                <Form.Label>Page Name</Form.Label>
+                                                <Form.Control value={this.state.page.name} name="name"
+                                                              onChange={this.handlePageFormChange}
+                                                              type="name" placeholder="Example page name...."/>
                                             </Form.Group>
                                             <Form.Group controlId="pageForm.ParentID">
                                                 <Form.Label>Parent Page ID</Form.Label>
                                                 <Form.Control as="select">
                                                 </Form.Control>
                                             </Form.Group>
-                                            {this.state.editPageBoolean &&
-                                            <Form.Group controlId="deleteForm.pageName">
-                                                <Form.Label>Select Page</Form.Label>
-                                                <Form.Control
-                                                    value={this.state.selectedPageIDTBE}
-                                                    onChange={this.handlePageIDTBE} as="select">
-                                                    {pageListDropDownMenu}
-                                                </Form.Control>
-                                            </Form.Group>
-                                            }
-                                            <Form.Group onChange={this.selectPageIcon.bind(this)}
+
+                                            <Form.Group onChange={this.handlePageFormChange}
                                                         controlId="PostForm.Icon">
                                                 <Form.Label>Page Icon <FeatherIcon
-                                                    icon={this.state.selectedPageIcon}/></Form.Label>
-                                                <Form.Control as="select">
+                                                    icon={this.state.page.icon}/></Form.Label>
+                                                <Form.Control as="select" name="icon">
                                                     {IconOptionList}
                                                 </Form.Control>
                                             </Form.Group>
