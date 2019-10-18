@@ -122,6 +122,7 @@ class App extends Component {
         this.handleDisableUser = this.handleDisableUser.bind(this);
         this.handleUserEditMode = this.handleUserEditMode.bind(this);
         this.handleUserFormChange = this.handleUserFormChange.bind(this);
+        this.handleUserIDTBD = this.handleUserIDTBD.bind(this);
         this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
 
 
@@ -137,7 +138,12 @@ class App extends Component {
 
     handlePageEditMode() {
         let page = this.state.pageList[0];
-        this.setState({editPageBoolean: !this.state.editPageBoolean, page,selectedPageIDTBE: page.ID})
+        if (typeof page !== "undefined" && this.state.editPageBoolean == false) {
+            this.setState({
+                page, selectedPageIDTBE: page.id
+            })
+        }
+        this.setState({editPageBoolean: !this.state.editPageBoolean})
     }
 
     handlePageFormChange(e) {
@@ -150,10 +156,6 @@ class App extends Component {
     handlePageIDTBE(e) {
         const thisPageID = e.target.value;
         const page = this.state.pageListLookup[thisPageID];
-        console.log(this.state.pageListLookup);
-        console.log(page);
-        console.log(thisPageID);
-        console.log(this.state);
         if (typeof page !== "undefined") {
             this.setState({
                 page
@@ -171,7 +173,12 @@ class App extends Component {
 
     handlePostEditMode() {
         let post = this.state.postList[0];
-        this.setState({editPostBoolean: !this.state.editPostBoolean, post})
+        if (typeof post !== "undefined" && this.state.editPostBoolean == false) {
+            this.setState({
+                post, selectedPostIDTBE: post.id
+            })
+        }
+        this.setState({editPostBoolean: !this.state.editPostBoolean})
     }
 
     handlePostFormChange(e) {
@@ -237,13 +244,16 @@ class App extends Component {
         this.setState({selectedUserIDTBE: thisUserID});
     }
 
-
     handlePageIDTBD(e) {
         this.setState({selectedPageIDTBD: e.target.value})
     }
 
     handlePostIDTBD(e) {
         this.setState({selectedPostIDTBD: e.target.value})
+    }
+
+    handleUserIDTBD(e) {
+        this.setState({selectedUserIDTBD: e.target.value})
     }
 
     handlePageID(e) {
@@ -278,10 +288,11 @@ class App extends Component {
             })
             .finally((data) => {
                 this.setState({pageIsLoading: false}); // set our page id so drop down works
+                let user = this.state.user;
+                user.pageID = this.state.pageList[0].id;
                 if (this.state.pageList.length > 0) {
                     this.setState({
-                        pageIsLoading: false,
-                        pageID: this.state.pageList[0].id,
+                        user,
                         selectedPageIDTBD: this.state.pageList[0].id
                     }) // set our page id so drop down works
                 }
@@ -374,8 +385,9 @@ class App extends Component {
             return;
         }
         this.setState({pageIsLoading: true});
-        //TODO fill in empty fields
+        ///TODO fill in empty fields
         let data = this.state.page;
+        data.pageID = 0; //TODO implement sub pages...
         data.createdTime = new Date();
         data.timeZone = moment.tz.guess();
         fetch("/api/addPage",
@@ -400,7 +412,6 @@ class App extends Component {
             })
     }
 
-    //TODO add missing fields.
     addUser() {
         this.setState({userIsLoading: true});
         const editMode = this.state.editUserBoolean;
@@ -655,7 +666,7 @@ class App extends Component {
                                     <Col lg={4} xs={12}>
                                         <Form>
                                             {this.state.editPostBoolean &&
-                                            <Form.Group controlId="selectpost.postName">
+                                            <Form.Group controlId="selectPostToEdit">
                                                 <Form.Label>Select Post</Form.Label>
                                                 <Form.Control
                                                     value={this.state.selectedPostIDTBE}
@@ -718,7 +729,7 @@ class App extends Component {
                                                 <Form.Label>Post Icon <FeatherIcon
                                                     icon={this.state.user.icon}/></Form.Label>
                                                 <Form.Control onChange={this.handlePostFormChange} name="icon"
-                                                              value={this.state.user.icon} as="select">
+                                                              value={this.state.post.icon} as="select">
                                                     {IconOptionList}
                                                 </Form.Control>
                                             </Form.Group>
@@ -790,11 +801,12 @@ class App extends Component {
                                                 </Form.Control>
                                             </Form.Group>
 
-                                            <Form.Group onChange={this.handlePageFormChange}
-                                                        controlId="PostForm.Icon">
+                                            <Form.Group
+                                                controlId="PostForm.Icon">
                                                 <Form.Label>Page Icon <FeatherIcon
                                                     icon={this.state.page.icon}/></Form.Label>
-                                                <Form.Control as="select" name="icon">
+                                                <Form.Control as="select" name="icon" value={this.state.page.icon}
+                                                              onChange={this.handlePageFormChange}>
                                                     {IconOptionList}
                                                 </Form.Control>
                                             </Form.Group>
@@ -860,9 +872,9 @@ class App extends Component {
                                                 </Form.Control>
                                             </Form.Group>
                                             <Button variant={'primary'}
-                                                    disabled={(this.state.pageIsLoading)}
-                                                    onClick={!(this.state.pageIsLoading) ? this.deletePost : null}>
-                                                {(this.state.pageIsLoading) ? <Spinner
+                                                    disabled={(this.state.postIsLoading)}
+                                                    onClick={!(this.state.postIsLoading) ? this.deletePost : null}>
+                                                {(this.state.postIsLoading) ? <Spinner
                                                     as="span"
                                                     animation="grow"
                                                     size="sm"
@@ -870,6 +882,25 @@ class App extends Component {
                                                     aria-hidden="true"
                                                 /> : ''}
                                                 {'Delete Post'}
+                                            </Button>
+                                            <Form.Group controlId="deleteForm.userNamer">
+                                                <Form.Label>Select User</Form.Label>
+                                                <Form.Control value={this.state.selectedUserIDTBD}
+                                                              onChange={this.handleUserIDTBD} as="select">
+                                                    {userListDropDownMenu}
+                                                </Form.Control>
+                                            </Form.Group>
+                                            <Button variant={'primary'}
+                                                    disabled={(this.state.userIsLoading)}
+                                                    onClick={!(this.state.userIsLoading) ? this.deleteUser : null}>
+                                                {(this.state.userIsLoading) ? <Spinner
+                                                    as="span"
+                                                    animation="grow"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                /> : ''}
+                                                {'Delete User'}
                                             </Button>
                                         </Form>
                                     </Col>
