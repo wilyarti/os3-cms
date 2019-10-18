@@ -36,10 +36,10 @@ class App extends Component {
             selectedPageIDTBD: '',
             selectedPageIDTBE: '',
             page: {
-                id: '',
+                id: 0,
                 disabled: false,
                 name: 'Enter a name',
-                icon: '',
+                icon: IconList[0],
                 pageID: '',
                 author: 'user',
                 createdTime: new Date(),
@@ -52,10 +52,10 @@ class App extends Component {
             selectedPostIDTBD: '',
             selectedPostIDTBE: '',
             post: {
-                id: 1,
+                id: 0,
                 disabled: false,
                 name: 'Please enter a name....',
-                icon: '',
+                icon: IconList[0],
                 pageID: '',
                 author: 'user',
                 createdTime: new Date(),
@@ -125,7 +125,6 @@ class App extends Component {
         this.handleUserIDTBD = this.handleUserIDTBD.bind(this);
         this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
 
-
         this.loadData = this.loadData.bind(this);
     }
 
@@ -149,7 +148,6 @@ class App extends Component {
     handlePageFormChange(e) {
         let page = this.state.page;
         page[e.target.name] = e.target.value;
-        console.log(this.state.page);
         this.setState({page})
     }
 
@@ -184,7 +182,6 @@ class App extends Component {
     handlePostFormChange(e) {
         let post = this.state.post;
         post[e.target.name] = e.target.value;
-        console.log(this.state.post);
         this.setState({post})
     }
 
@@ -197,7 +194,6 @@ class App extends Component {
     handlePostIDTBE(e) {
         const thisPostID = e.target.value;
         const post = this.state.postListLookup[thisPostID];
-        console.log(post);
         if (typeof post !== "undefined") {
             this.setState({
                 post
@@ -221,8 +217,6 @@ class App extends Component {
     handleUserFormChange(e) {
         let user = this.state.user;
         user[e.target.name] = e.target.value;
-        console.log(this.state.user);
-        console.log(this.state.selectedUserIDTBE);
         this.setState({user})
     }
 
@@ -230,11 +224,6 @@ class App extends Component {
     handleUserIDTBE(e) {
         const thisUserID = e.target.value;
         const user = this.state.userListLookup[thisUserID];
-        console.log("User ID: " + user.id);
-        console.log("User name: " + user.username);
-        console.log("Disabled: " + user.disabled);
-        console.log("Checkbox state: " + this.state.userDisabledBoolean);
-
         if (typeof user !== "undefined") {
             this.setState({
                 user,
@@ -267,7 +256,11 @@ class App extends Component {
     selectPostIcon(icon) {
         this.setState({selectedPostIcon: icon.target.value});
     }
-
+    loadData() {
+        this.getPosts();
+        this.getPages();
+        this.getUsers();
+    }
     // get pages list from server
     getPages() {
         this.setState({pageIsLoading: true});
@@ -287,15 +280,9 @@ class App extends Component {
                 alert(`${error} retrieving pages failed.`)
             })
             .finally((data) => {
-                this.setState({pageIsLoading: false}); // set our page id so drop down works
-                let user = this.state.user;
-                user.pageID = this.state.pageList[0].id;
-                if (this.state.pageList.length > 0) {
-                    this.setState({
-                        user,
-                        selectedPageIDTBD: this.state.pageList[0].id
-                    }) // set our page id so drop down works
-                }
+                let post = this.state.post;
+                post.pageID = this.state.pageList[0].id;
+                this.setState({pageIsLoading: false, post}); // set our page id so drop down works
             });
     }
 
@@ -358,29 +345,8 @@ class App extends Component {
                 }
             })
     }
-
-
-    loadData() {
-        this.setState({pageIsLoading: true});
-        fetch("/api/getAllPostsAndPages").then(response => response.json())
-            .then((data) => {
-                console.log(data);
-                this.setState({pageList: data})
-            })
-            .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
-            })
-            .finally((data) => {
-                this.setState({
-                    pageIsLoading: false, pageID: this.state.pageList[0].id, selectedPageIDTBD: '',
-                    selectedPostIDTBD: ''
-                })
-            })
-    }
-
     addPage() {
         if (this.state.editPageBoolean) {
-            console.log("Updating page");
             this.updatePage();
             return;
         }
@@ -528,10 +494,8 @@ class App extends Component {
     }
 
     deletePage() {
-        console.log(this.state);
         this.setState({pageIsLoading: true});
-        console.log(`Page ID: ${this.state.pageID}`);
-        var data = {
+        let data = {
             id: this.state.selectedPageIDTBD,
         };
         fetch("/api/deletePage",
@@ -557,8 +521,7 @@ class App extends Component {
 
     deletePost() {
         this.setState({postIsLoading: true});
-        console.log(`Post ID: ${this.state.postID}`);
-        var data = {
+        let data = {
             id: this.state.selectedPostIDTBD,
         };
         fetch("/api/deletePost",
@@ -584,7 +547,6 @@ class App extends Component {
 
     deleteUser() {
         this.setState({userIsLoading: true});
-        console.log(`User ID: ${this.state.userID}`);
         let data = {
             id: this.state.selectedUserIDTBD,
             username: "On the chopping block."
@@ -610,11 +572,9 @@ class App extends Component {
             })
     }
 
+
     componentWillMount() {
-        this.getPosts(); // load our post and page list on load
-        this.getPages();
-        this.getUsers();
-        console.log(this.state);
+        this.loadData();
     }
 
     render() {
@@ -658,7 +618,7 @@ class App extends Component {
                     onSelect={key => this.setState({key})}
                 >
                     <Tab eventKey="editPost"
-                         title={<FeatherIcon icon={"edit"}></FeatherIcon>}>
+                         title={<FeatherIcon icon={"edit"}/>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -838,7 +798,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="delete"
-                         title={<FeatherIcon icon={"file-minus"}></FeatherIcon>}>
+                         title={<FeatherIcon icon={"file-minus"}/>}>
                         <br/>
                         <post>
                             <post-contents>
@@ -909,7 +869,7 @@ class App extends Component {
                         </post>
                     </Tab>
                     <Tab eventKey="user"
-                         title={<FeatherIcon icon={"users"}></FeatherIcon>}>
+                         title={<FeatherIcon icon={"users"}/>}>
                         <br/>
                         <post>
                             <post-contents>
