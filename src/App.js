@@ -22,41 +22,52 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            editPostBoolean: false,
-            editPageBoolean: false,
-            postIsLoading: false,
-            pageIsLoading: false,
+            // storage for arrays
             pageList: [],
             postList: [],
             userList: [],
-            selectedPageIDTBD: '',
-            selectedPostIDTBD: '',
-            selectedUserIDTBD: '',
-            selectedPageIDTBE: '',
-            selectedPostIDTBE: '',
-            selectedUserIDTBE: '',
             pageListLookup: {},
             postListLookup: {},
             userListLookup: {},
+            // pages
+            pageIsLoading: false,
+            editPageBoolean: false,
+            pageDisabledBoolean: false,
+            selectedPageIDTBD: '',
+            selectedPageIDTBE: '',
             page: {
-              name: 'Enter a name...',
-                pageID: '',
+                id: '',
+                disabled: false,
+                name: 'Enter a name',
                 icon: '',
-                createdTime: new Date(),
-                timeZone: moment.tz.guess(),
-            },
-            post: {
-                name: "Please enter a name...",
                 pageID: '',
-                icon: "camera",
-                contents: '',
+                author: 'user',
                 createdTime: new Date(),
                 timeZone: moment.tz.guess(),
             },
-            // username stuff
+            // posts
+            postIsLoading: false,
+            editPostBoolean: false,
+            postDisabledBoolean: false,
+            selectedPostIDTBD: '',
+            selectedPostIDTBE: '',
+            post: {
+                id: 1,
+                disabled: false,
+                name: 'Please enter a name....',
+                icon: '',
+                pageID: '',
+                author: 'user',
+                createdTime: new Date(),
+                timeZone: moment.tz.guess(),
+                contents: ''
+            },
+            // users
             userIsLoading: false,
             userEditBoolean: false,
             userDisabledBoolean: false,
+            selectedUserIDTBD: '',
+            selectedUserIDTBE: '',
             user: {
                 // NOT NULLABLE entries
                 id: 0,
@@ -82,50 +93,53 @@ class App extends Component {
             },
         };
 
-        this.addUser = this.addUser.bind(this);
-        this.handleUserFormChange = this.handleUserFormChange.bind(this);
-        this.handlePostFormChange  = this.handlePostFormChange.bind(this);
-        this.handlePageFormChange  = this.handlePageFormChange.bind(this);
-
+        // pages
         this.addPage = this.addPage.bind(this);
+        this.deletePage = this.deletePage.bind(this);
+        this.getPages = this.getPages.bind(this);
+        this.handleDisablePage = this.handleDisablePage.bind(this);
+        this.handlePageEditMode = this.handlePageEditMode.bind(this);
+        this.handlePageFormChange = this.handlePageFormChange.bind(this);
+        this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
+        this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
+
+        // posts
         this.addPost = this.addPost.bind(this);
+        this.deletePost = this.deletePost.bind(this);
+        this.getPosts = this.getPosts.bind(this);
+        this.handleDisablePost = this.handleDisablePost.bind(this);
         this.updatePost = this.updatePost.bind(this);
-        this.selectPageIcon = this.selectPageIcon.bind(this);
-        this.selectPostIcon = this.selectPostIcon.bind(this);
-        this.handlePageID = this.handlePageID.bind(this);
         this.handleEditorChange = this.handleEditorChange.bind(this);
+        this.handlePostEditMode = this.handlePostEditMode.bind(this);
+        this.handlePostFormChange = this.handlePostFormChange.bind(this);
+        this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
+        this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
+
+        // users
+        this.addUser = this.addUser.bind(this);
+        this.deleteUser = this.deleteUser.bind(this);
+        this.getUsers = this.getUsers.bind(this);
+        this.handleDisableUser = this.handleDisableUser.bind(this);
+        this.handleUserEditMode = this.handleUserEditMode.bind(this);
+        this.handleUserFormChange = this.handleUserFormChange.bind(this);
+        this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
+
 
         this.loadData = this.loadData.bind(this);
-        this.getPages = this.getPages.bind(this);
-        this.getPosts = this.getPosts.bind(this);
-        this.getUsers = this.getUsers.bind(this);
-
-        this.handlePostEditMode = this.handlePostEditMode.bind(this);
-        this.handlePageEditMode = this.handlePageEditMode.bind(this);
-        this.handleUserEditMode = this.handleUserEditMode.bind(this);
-
-        this.handlePageIDTBD = this.handlePageIDTBD.bind(this);
-        this.handlePostIDTBD = this.handlePostIDTBD.bind(this);
-        this.handlePageIDTBE = this.handlePageIDTBE.bind(this);
-        this.handlePostIDTBE = this.handlePostIDTBE.bind(this);
-        this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
-        this.deletePage = this.deletePage.bind(this);
-        this.deletePost = this.deletePost.bind(this);
-        this.deleteUser = this.deleteUser.bind(this);
-
-        this.handleDisableUser = this.handleDisableUser.bind(this);
     }
 
-    // Use the .name field to dynamically handle all field values...
-    // This way we can use one handler for the whole form group.
-    handlePostFormChange(e) {
-        let post = this.state.post;
-        post[e.target.name] = e.target.value;
-        console.log(this.state.post);
-        this.setState({post})
+    // pages
+    handleDisablePage() {
+        let page = this.state.page;
+        page.disabled = !page.disabled;
+        this.setState({page})
     }
-    // Use the .name field to dynamically handle all field values...
-    // This way we can use one handler for the whole form group.
+
+    handlePageEditMode() {
+        let page = this.state.pageList[0];
+        this.setState({editPageBoolean: !this.state.editPageBoolean, page,selectedPageIDTBE: page.ID})
+    }
+
     handlePageFormChange(e) {
         let page = this.state.page;
         page[e.target.name] = e.target.value;
@@ -133,53 +147,44 @@ class App extends Component {
         this.setState({page})
     }
 
-    handleEditorChange(content, editor) {
-        this.setState({postContents: content});
-    }
-
-    // Use the .name field to dynamically handle all field values...
-    // This way we can use one handler for the whole form group.
-    handleUserFormChange(e) {
-        let user = this.state.user;
-        user[e.target.name] = e.target.value;
-        console.log(this.state.user);
-        console.log(this.state.selectedUserIDTBE);
-        this.setState({user})
-    }
-
-    handlePostEditMode() {
-        const newEditMode = !this.state.editPostBoolean;
-        this.setState({editPostBoolean: newEditMode})
-    }
-
-    handlePageEditMode() {
-        const newEditMode = !this.state.editPageBoolean;
-        this.setState({editPageBoolean: newEditMode})
-    }
-
-    handleUserEditMode() {
-        let user = this.state.userList[0];
-        this.setState({editUserBoolean: !this.state.editUserBoolean, user})
-    }
-
-    handlePageIDTBD(e) {
-        this.setState({selectedPageIDTBD: e.target.value})
-    }
-
-    handlePostIDTBD(e) {
-        this.setState({selectedPostIDTBD: e.target.value})
-    }
-
     handlePageIDTBE(e) {
         const thisPageID = e.target.value;
         const page = this.state.pageListLookup[thisPageID];
+        console.log(this.state.pageListLookup);
         console.log(page);
+        console.log(thisPageID);
+        console.log(this.state);
         if (typeof page !== "undefined") {
             this.setState({
                 page
             })
         }
         this.setState({selectedPageIDTBE: thisPageID})
+    }
+
+    //posts
+    handleDisablePost() {
+        let post = this.state.post;
+        post.disabled = !post.disabled;
+        this.setState({post})
+    }
+
+    handlePostEditMode() {
+        let post = this.state.postList[0];
+        this.setState({editPostBoolean: !this.state.editPostBoolean, post})
+    }
+
+    handlePostFormChange(e) {
+        let post = this.state.post;
+        post[e.target.name] = e.target.value;
+        console.log(this.state.post);
+        this.setState({post})
+    }
+
+    handleEditorChange(content, editor) {
+        let post = this.state.post;
+        post.contents = content
+        this.setState({post});
     }
 
     handlePostIDTBE(e) {
@@ -192,6 +197,26 @@ class App extends Component {
             })
         }
         this.setState({selectedPostIDTBE: thisPostID})
+    }
+
+    // users
+    handleDisableUser() {
+        let user = this.state.user;
+        user.disabled = !user.disabled;
+        this.setState({user})
+    }
+
+    handleUserEditMode() {
+        let user = this.state.userList[0];
+        this.setState({editUserBoolean: !this.state.editUserBoolean, user})
+    }
+
+    handleUserFormChange(e) {
+        let user = this.state.user;
+        user[e.target.name] = e.target.value;
+        console.log(this.state.user);
+        console.log(this.state.selectedUserIDTBE);
+        this.setState({user})
     }
 
     // Changes our form to edit users.
@@ -213,10 +238,12 @@ class App extends Component {
     }
 
 
-    handleDisableUser() {
-        let user  = this.state.user;
-        user.disabled = !user.disabled;
-        this.setState({user})
+    handlePageIDTBD(e) {
+        this.setState({selectedPageIDTBD: e.target.value})
+    }
+
+    handlePostIDTBD(e) {
+        this.setState({selectedPostIDTBD: e.target.value})
     }
 
     handlePageID(e) {
@@ -348,12 +375,9 @@ class App extends Component {
         }
         this.setState({pageIsLoading: true});
         //TODO fill in empty fields
-        let data = {
-            name: this.state.page.name,
-            icon: this.state.page.icon,
-            createdTime: new Date(),
-            timeZone: moment.tz.guess(),
-        };
+        let data = this.state.page;
+        data.createdTime = new Date();
+        data.timeZone = moment.tz.guess();
         fetch("/api/addPage",
             {
                 method: 'POST', // or 'PUT'
@@ -407,14 +431,8 @@ class App extends Component {
 
     updatePage() {
         this.setState({pageIsLoading: true});
-        let data = {
-            id: this.state.selectedPageIDTBE,
-            username: this.state.pageName,
-            pageID: this.state.pageID,
-            icon: this.state.selectedPageIcon,
-            createdTime: new Date(),
-            contents: this.state.pageContents
-        };
+        let data = this.state.page;
+        data.id = this.state.selectedPageIDTBE;
         fetch("/api/updatePage",
             {
                 method: 'POST',
@@ -439,14 +457,10 @@ class App extends Component {
 
     updatePost() {
         this.setState({postIsLoading: true});
-        let data = {
-            id: this.state.selectedPostIDTBE,
-            username: this.state.postName,
-            pageID: this.state.pageID,
-            icon: this.state.selectedPostIcon,
-            createdTime: new Date(),
-            contents: this.state.postContents
-        };
+        let data = this.state.post;
+        data.id = this.state.selectedPostIDTBE;
+        data.createdTime = new Date();
+        data.timeZone = moment.tz.guess();
         fetch("/api/updatePost",
             {
                 method: 'POST',
@@ -477,13 +491,9 @@ class App extends Component {
         }
         console.log("Adding post");
         this.setState({postIsLoading: true});
-        let data = {
-            name: this.state.post.name,
-            icon: this.state.post.icon,
-            contents: this.state.post.contents,
-            createdTime: new Date(),
-            timeZone: moment.tz.guess(),
-        };
+        let data = this.state.post;
+        data.createdTime = new Date();
+        data.timeZone = moment.tz.guess();
         fetch("/api/addPost",
             {
                 method: 'POST',
@@ -692,7 +702,8 @@ class App extends Component {
 
                                             <Form.Group controlId="PostForm.ParentID">
                                                 <Form.Label>Parent Page ID</Form.Label>
-                                                <Form.Control value={this.state.post.pageID} name="pageID" onChange={this.handlePostFormChange}
+                                                <Form.Control value={this.state.post.pageID} name="pageID"
+                                                              onChange={this.handlePostFormChange}
                                                               as="select">
                                                     {pageListDropDownMenu}
                                                 </Form.Control>
@@ -724,6 +735,10 @@ class App extends Component {
                                                 </Form.Check>
                                             </Form.Group>
                                         </Form>
+
+                                        <Form.Check type="checkbox" label="Disable Post"
+                                                    checked={this.state.post.disabled}
+                                                    onChange={this.handleDisablePost}/>
                                     </Col>
                                 </Row>
                                 <Row>
@@ -753,7 +768,7 @@ class App extends Component {
                                 <Row>
                                     <Col lg={4} xs={12}>
                                         {this.state.editPageBoolean &&
-                                        <Form.Group controlId="deleteForm.pageName">
+                                        <Form.Group controlId="pageid.pageName">
                                             <Form.Label>Select Page</Form.Label>
                                             <Form.Control
                                                 value={this.state.selectedPageIDTBE}
@@ -790,7 +805,9 @@ class App extends Component {
                                                         onChange={this.handlePageEditMode}>
                                             </Form.Check>
                                         </Form.Group>
-
+                                        <Form.Check type="checkbox" label="Disable Page"
+                                                    checked={this.state.page.disabled}
+                                                    onChange={this.handleDisablePage}/>
                                         <Button variant={'primary'}
                                                 disabled={(this.state.pageIsLoading)}
                                                 onClick={!(this.state.pageIsLoading) ? this.addPage : null}>
