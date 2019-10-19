@@ -10,10 +10,13 @@ import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
+import Toast from 'react-bootstrap/Toast';
 import FeatherIcon from 'feather-icons-react';
 import {Editor} from '@tinymce/tinymce-react';
 import IconList from './icons'
 import moment from "moment-timezone";
+import Moment from "moment";
+
 
 class App extends Component {
     errorMessage;
@@ -66,7 +69,7 @@ class App extends Component {
             userEditBoolean: false,
             userDisabledBoolean: false,
             selectedUserIDTBD: '',
-            selectedUserIDTBE: '',
+            selectedUserIDTBE: 0,
             user: {
                 // NOT NULLABLE entries
                 id: 0,
@@ -90,6 +93,7 @@ class App extends Component {
                 secondaryGroup: 0,
                 metadata: ''
             },
+            msgs: [],
         };
 
         // pages
@@ -125,6 +129,32 @@ class App extends Component {
         this.handleUserIDTBE = this.handleUserIDTBE.bind(this);
 
         this.loadData = this.loadData.bind(this);
+        this.closeToast = this.closeToast.bind(this);
+        this.handleResponse = this.handleResponse.bind(this);
+    }
+
+    closeToast(index) {
+        let msgs = this.state.msgs;
+        delete (msgs[index]);
+        console.log(msgs);
+        console.log(index);
+        this.setState({msgs});
+    }
+
+    handleResponse(data, successTitle, failureTitle) {
+        let msgs = this.state.msgs;
+        let msg = {
+            name: '',
+            time: new Moment(),
+            body: data.errorMessage
+        };
+        if (data.success === true) {
+            msg.name = successTitle;
+        } else {
+            msg.name = failureTitle;
+        }
+        msgs.push(msg);
+        this.setState({msgs});
     }
 
     /**
@@ -312,12 +342,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to add page." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully added page.', 'Unable to add page.');
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: `Error adding page.`,
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, pageIsLoading: false});
             })
             .finally(() => {
                 this.setState({pageIsLoading: false});
@@ -347,12 +383,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to add post." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully added post.', 'Unable to add post.');
+
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                    name: `Error adding page.`,
+                    time: new Moment(),
+                    body: `Error: ${error}`
+                };
+                msgs.push(msg);
+                this.setState({msgs, postIsLoading: false});
             })
             .finally(() => {
                 this.setState({postIsLoading: false});
@@ -378,12 +420,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to add user." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully added user.', 'Unable to add user.');
+
             })
             .catch((error) => {
-                alert(`${error} adding user failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                    name: `Error adding user.`,
+                    time: new Moment(),
+                    body: `Error: ${error}`
+                };
+                msgs.push(msg);
+                this.setState({msgs, userIsLoading: false});
             })
             .finally(() => {
                 this.setState({userIsLoading: false}, () => this.getUsers());
@@ -405,12 +453,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to delete page." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully deleted page.', 'Unable to delete page.');
+
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                    name: `Error deleting page.`,
+                    time: new Moment(),
+                    body: `Error: ${error}`
+                };
+                msgs.push(msg);
+                this.setState({msgs, pageIsLoading: false});
             })
             .finally(() => {
                 this.getPages();
@@ -432,12 +486,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to add post." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully delete post.', 'Unable to delete post.');
+
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                    name: `Error deleting post.`,
+                    time: new Moment(),
+                    body: `Error: ${error}`
+                };
+                msgs.push(msg);
+                this.setState({msgs, postIsLoading: false});
             })
             .finally(() => {
                 this.getPosts();
@@ -460,12 +520,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to delete user." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully deleted user.', 'Unable to delete user.');
+
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                    name: `Error deleting user.`,
+                    time: new Moment(),
+                    body: `Error: ${error}`
+                };
+                msgs.push(msg);
+                this.setState({msgs, userIsLoading: false});
             })
             .finally(() => {
                 this.getUsers();
@@ -478,7 +544,7 @@ class App extends Component {
         fetch("/api/getPages").then(response => response.json())
             .then((data) => {
                 if (data.success === false) {
-                    alert(data.errorMessage);
+                    this.handleResponse(data, 'Successfully retrieved all pages.', 'Unable to get pages.');
                     return
                 }
                 let lookup = {};
@@ -488,12 +554,18 @@ class App extends Component {
                 this.setState({pageList: data, pageListLookup: lookup});
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: "Error retrieving pages.",
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, pageIsLoading: false});
             })
             .finally(() => {
-                let post = this.state.post;
-                post.pageID = this.state.pageList[0].id;
-                this.setState({pageIsLoading: false, post}); // set our page id so drop down works
+                this.setState({pageIsLoading: false}); // set our page id so drop down works
             });
     }
 
@@ -503,7 +575,7 @@ class App extends Component {
         fetch("/api/getPosts").then(response => response.json())
             .then((data) => {
                 if (data.success === false) {
-                    alert(data.errorMessage);
+                    this.handleResponse(data, 'Successfully retrieved all posts.', 'Unable to get posts.');
                     return
                 }
                 let lookup = {};
@@ -513,17 +585,32 @@ class App extends Component {
                 this.setState({postList: data, postListLookup: lookup});
             })
             .catch((error) => {
-                alert(`${error} retrieving posts failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: "Error retrieving posts.",
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, postIsLoading: false});
             })
             .finally(() => {
                 this.setState({postIsLoading: false});
-                if (this.state.postList.length > 0) {
+                if (this.state.pageList.length > 0) {
+                    let post = this.state.post;
+                    post.pageID = this.state.pageList[0].id;
                     this.setState({
-                        postIsLoading: false,
-                        postID: this.state.postList[0].id,
+                        post,
                         selectedPostIDTBD: this.state.postList[0].id
                     }) // set our page id so drop down works
                 }
+                if (this.state.postList.length > 0) {
+                    this.setState({
+                        selectedPostIDTBD: this.state.postList[0].id
+                    }) // set our page id so drop down works
+                }
+                this.setState({postIsLoading: false})
             })
     }
 
@@ -533,7 +620,7 @@ class App extends Component {
         fetch("/api/getUsers").then(response => response.json())
             .then((data) => {
                 if (data.success === false) {
-                    alert(data.errorMessage);
+                    this.handleResponse(data, 'Successfully retrieved all users.', 'Unable to get users.');
                     return
                 }
                 let lookup = {};
@@ -543,13 +630,21 @@ class App extends Component {
                 this.setState({userList: data, userListLookup: lookup});
             })
             .catch((error) => {
-                alert(`${error} retrieving users failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: "Error retrieving users.",
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, userIsLoading: false});
             })
             .finally(() => {
                 this.setState({userIsLoading: false});
-                let selectedUserIDTBE = this.state.selectedUserIDTBE ? this.state.selectedUserIDTBE : this.state.userList[0].id;
-                let userID = this.state.userID ? this.state.userID : this.state.userList[0].id;
                 if (this.state.userList.length > 0) {
+                    let selectedUserIDTBE = this.state.selectedUserIDTBE ? this.state.selectedUserIDTBE : this.state.userList[0].id;
+                    let userID = this.state.userID ? this.state.userID : this.state.userList[0].id;
                     this.setState({
                         userID,
                         selectedUserIDTBE
@@ -572,12 +667,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to update page." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully updated pages.', 'Unable to update page.');
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: "Error updating page.",
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, pageIsLoading: false})
             })
             .finally(() => {
                 this.setState({pageIsLoading: false});
@@ -601,12 +702,18 @@ class App extends Component {
                 }
             }).then(response => response.json())
             .then((data) => {
-                if (data.success !== true) {
-                    alert("Unable to update post." + data.errorMessage)
-                }
+                this.handleResponse(data, 'Successfully updated post.', 'Unable to update post.');
             })
             .catch((error) => {
-                alert(`${error} retrieving pages failed.`)
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: `Error updating post.`,
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs, postIsLoading: false});
             })
             .finally(() => {
                 this.setState({postIsLoading: false});
@@ -615,7 +722,7 @@ class App extends Component {
     }
 
 
-    componentWillMount() {
+    componentDidMount() {
         this.loadData();
     }
 
@@ -623,6 +730,7 @@ class App extends Component {
         this.getPosts();
         this.getPages();
         this.getUsers();
+        console.log(this.state);
     }
 
     render() {
@@ -656,9 +764,30 @@ class App extends Component {
                 <option key={index} value={IconList[index]}>{IconList[index]}</option>
             )
         });
+        const messages = this.state.msgs;
+        const msgs = messages.map((_, index) => {
+            return (
+                <Toast key={index + new Date()} show={true} onClose={() => this.closeToast(index)} autohide>
+                    <Toast.Header>
+                        <img style={{width: 20, height: 20}} src="favicon.png" className="rounded mr-2" alt=""/>
+                        <strong className="mr-auto">{messages[index].name}</strong>
+                        <small>{messages[index].time.fromNow()}</small>
+                    </Toast.Header>
+                    <Toast.Body>{messages[index].body}</Toast.Body>
+                </Toast>
+            )
+        });
 
         return (
             <Container fluid={true}>
+                <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    zIndex: 100,
+                }}>
+                    {msgs}
+                </div>
                 <Tabs
                     id="tabs"
                     activeKey={this.state.key}
@@ -668,8 +797,8 @@ class App extends Component {
                     <Tab eventKey="editPost"
                          title={<FeatherIcon icon={"edit"}/>}>
                         <br/>
-                        <post>
-                            <post-contents>
+                        <div className={'post'}>
+                            <div className={'post-contents'}>
                                 <Row>
                                     <Col lg={4} xs={12}>
                                         <Form>
@@ -736,7 +865,7 @@ class App extends Component {
                                         <Form>
                                             <Form.Group controlId="post.icon">
                                                 <Form.Label>Post Icon <FeatherIcon
-                                                    icon={this.state.user.icon}/></Form.Label>
+                                                    icon={this.state.post.icon}/></Form.Label>
                                                 <Form.Control onChange={this.handlePostFormChange} name="icon"
                                                               value={this.state.post.icon} as="select">
                                                     {IconOptionList}
@@ -777,14 +906,14 @@ class App extends Component {
                                         </Button>
                                     </Col>
                                 </Row>
-                            </post-contents>
-                        </post>
+                            </div>
+                        </div>
                     </Tab>
                     <Tab eventKey="Page"
                          title={<FeatherIcon icon={"file-plus"}/>}>
                         <br/>
-                        <post>
-                            <post-contents>
+                        <div className={'post'}>
+                            <div className={'post-contents'}>
                                 <Row>
                                     <Col lg={4} xs={12}>
                                         {this.state.editPageBoolean &&
@@ -843,14 +972,14 @@ class App extends Component {
                                         </Button>
                                     </Col>
                                 </Row>
-                            </post-contents>
-                        </post>
+                            </div>
+                        </div>
                     </Tab>
                     <Tab eventKey="delete"
                          title={<FeatherIcon icon={"file-minus"}/>}>
                         <br/>
-                        <post>
-                            <post-contents>
+                        <div className={'post'}>
+                            <div className={'post-contents'}>
                                 <Row>
                                     <Col lg={4} xs={12}>
                                         <Form>
@@ -914,14 +1043,14 @@ class App extends Component {
                                         </Form>
                                     </Col>
                                 </Row>
-                            </post-contents>
-                        </post>
+                            </div>
+                        </div>
                     </Tab>
                     <Tab eventKey="user"
                          title={<FeatherIcon icon={"users"}/>}>
                         <br/>
-                        <post>
-                            <post-contents>
+                        <div className={'post'}>
+                            <div className={'post-contents'}>
                                 <Form>
                                     <Form.Row>
                                         {this.state.editUserBoolean &&
@@ -1063,8 +1192,8 @@ class App extends Component {
                                     /> : ''}
                                     {this.state.editUserBoolean ? 'Update' : 'Add User'}
                                 </Button>
-                            </post-contents>
-                        </post>
+                            </div>
+                        </div>
                     </Tab>
                 </Tabs>
             </Container>
