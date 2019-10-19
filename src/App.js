@@ -443,6 +443,7 @@ class App extends Component {
         this.setState({pageIsLoading: true});
         let data = {
             id: this.state.selectedPageIDTBD,
+            name: this.state.pageListLookup[this.state.selectedPageIDTBD].name
         };
         fetch("/api/deletePage",
             {
@@ -476,6 +477,7 @@ class App extends Component {
         this.setState({postIsLoading: true});
         let data = {
             id: this.state.selectedPostIDTBD,
+            name: this.state.postListLookup[this.state.selectedPostIDTBD].name
         };
         fetch("/api/deletePost",
             {
@@ -509,7 +511,7 @@ class App extends Component {
         this.setState({userIsLoading: true});
         let data = {
             id: this.state.selectedUserIDTBD,
-            username: "On the chopping block."
+            username: this.state.userListLookup[this.state.selectedUserIDTBD].username
         };
         fetch("/api/deleteUser",
             {
@@ -551,6 +553,7 @@ class App extends Component {
                 for (let i = 0, len = data.length; i < len; i++) {
                     lookup[data[i].id] = data[i];
                 }
+
                 this.setState({pageList: data, pageListLookup: lookup});
             })
             .catch((error) => {
@@ -565,6 +568,11 @@ class App extends Component {
                 this.setState({msgs, pageIsLoading: false});
             })
             .finally(() => {
+                if (this.state.pageList.length > 0) {
+                    this.setState({
+                        selectedPageIDTBD: this.state.pageList[0].id
+                    }) // set our page id so drop down works
+                }
                 this.setState({pageIsLoading: false}); // set our page id so drop down works
             });
     }
@@ -727,8 +735,8 @@ class App extends Component {
     }
 
     loadData() {
-        this.getPosts();
         this.getPages();
+        this.getPosts();
         this.getUsers();
         console.log(this.state);
     }
