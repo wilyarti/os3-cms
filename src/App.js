@@ -9,6 +9,7 @@ import Row from 'react-bootstrap/Row';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import Button from 'react-bootstrap/Button';
+import Table from 'react-bootstrap/Table';
 import Spinner from 'react-bootstrap/Spinner';
 import Toast from 'react-bootstrap/Toast';
 import FeatherIcon from 'feather-icons-react';
@@ -16,7 +17,8 @@ import {Editor} from '@tinymce/tinymce-react';
 import IconList from './icons'
 import moment from "moment-timezone";
 import Moment from "moment";
-
+import FileUploadProgress  from 'react-fileupload-progress';
+const uuidv1 = require('uuid/v1');
 
 class App extends Component {
     errorMessage;
@@ -94,6 +96,7 @@ class App extends Component {
                 metadata: ''
             },
             msgs: [],
+            files: []
         };
 
         // pages
@@ -539,7 +542,33 @@ class App extends Component {
                 this.getUsers();
             })
     }
+    // Get pages from the server and create lookup table.
+    getFiles() {
+        fetch("/api/getFiles").then(response => response.json())
+            .then((data) => {
+                if (data.success === false) {
+                    this.handleResponse(data, 'Successfully retrieved all files.', 'Unable to get files.');
+                    return
+                }
+                let lookup = {};
+                for (let i = 0, len = data.length; i < len; i++) {
+                    lookup[data[i].id] = data[i];
+                }
 
+                this.setState({files: data, fileListLookup: lookup});
+            })
+            .catch((error) => {
+                let msgs = this.state.msgs;
+                let msg = {
+                        name: "Error retrieving pages.",
+                        time: new Moment(),
+                        body: `Error: ${error}`
+                    }
+                ;
+                msgs.push(msg);
+                this.setState({msgs});
+            });
+    }
     // Get pages from the server and create lookup table.
     getPages() {
         this.setState({pageIsLoading: true});
@@ -738,6 +767,7 @@ class App extends Component {
         this.getPages();
         this.getPosts();
         this.getUsers();
+        this.getFiles();
         console.log(this.state);
     }
 
@@ -785,11 +815,21 @@ class App extends Component {
                 </Toast>
             )
         });
-
+        const files = this.state.files;
+        const fileTable = files.map((_, index) => {
+            const fileUrlPath = "/files/" + files[index].name;
+            return (
+                <tr key={uuidv1()}>
+                    <td>{index + 1}</td>
+                    <td><a href={"/files/" + files[index].name}> Click here</a></td>
+                    <td>{files[index].path} </td>
+                </tr>
+            )
+        });
         return (
             <Container fluid={true}>
                 <div style={{
-                    position: 'absolute',
+                    position: 'fixed',
                     top: 0,
                     right: 0,
                     zIndex: 100,
@@ -830,6 +870,9 @@ class App extends Component {
                                             init={{
                                                 height: 500,
                                                 menubar: true,
+                                                convert_url: false,
+                                                relative_urls: false,
+                                                remove_script_host : false,
                                                 plugins: [
                                                     'advlist autolink lists link image charmap print preview anchor',
                                                     'searchreplace visualblocks code fullscreen',
@@ -1054,6 +1097,7 @@ class App extends Component {
                             </div>
                         </div>
                     </Tab>
+
                     <Tab eventKey="user"
                          title={<FeatherIcon icon={"users"}/>}>
                         <br/>
@@ -1200,6 +1244,43 @@ class App extends Component {
                                     /> : ''}
                                     {this.state.editUserBoolean ? 'Update' : 'Add User'}
                                 </Button>
+                            </div>
+                        </div>
+                    </Tab>
+                    <Tab eventKey="file"
+                         title={<FeatherIcon icon={"file-plus"}/>}>
+                        <br/>
+                        <div className={'post'}>
+                            <div className={'post-contents'}>
+                                <Row>
+                                    <br/>
+                                    <Col xs={4}>
+                                    <FileUploadProgress key='ex1' url='/api/uploadFile' method="POST"
+                                                        onProgress={(e, request, progress) => {console.log('progress', e, request, progress);}}
+                                                        onLoad={ (e, request) => {console.log('load', e, request); this.getFiles();}}
+                                                        onError={ (e, request) => {console.log('error', e, request);}}
+                                                        onAbort={ (e, request) => {console.log('abort', e, request);}}
+                                    />
+                                    </Col>
+                                </Row>
+                                <Col>
+                                        <Row>
+                                            <Col>
+                                                <Table striped bordered hover>
+                                                    <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>File Name</th>
+                                                        <th>Path</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {fileTable}
+                                                    </tbody>
+                                                </Table>
+                                            </Col>
+                                        </Row>
+                                </Col>
                             </div>
                         </div>
                     </Tab>

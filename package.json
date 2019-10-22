@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@tinymce/tinymce-react": "latest",
     "bootstrap": "^4.3.1",
     "chart.js": "^2.8.0",
     "feather-icons-react": "^0.3.2",
@@ -17,11 +18,11 @@
     "react-datepicker": "^2.8.0",
     "react-dom": "^16.8.6",
     "react-feather": "^2.0.3",
+    "react-fileupload-progress": "^0.5.0",
     "react-moment": "^0.9.2",
     "react-native-vector-icons": "^6.6.0",
     "react-scripts": "0.9.5",
-    "react-timezone-picker": "^1.0.8",
-    "@tinymce/tinymce-react": "latest"
+    "react-timezone-picker": "^1.0.8"
   },
   "devDependencies": {},
   "scripts": {
