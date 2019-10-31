@@ -17,7 +17,8 @@ import {Editor} from '@tinymce/tinymce-react';
 import IconList from './icons'
 import moment from "moment-timezone";
 import Moment from "moment";
-import FileUploadProgress  from 'react-fileupload-progress';
+import FileUploadProgress from 'react-fileupload-progress';
+
 const uuidv1 = require('uuid/v1');
 
 class App extends Component {
@@ -542,6 +543,7 @@ class App extends Component {
                 this.getUsers();
             })
     }
+
     // Get pages from the server and create lookup table.
     getFiles() {
         fetch("/api/getFiles").then(response => response.json())
@@ -569,6 +571,7 @@ class App extends Component {
                 this.setState({msgs});
             });
     }
+
     // Get pages from the server and create lookup table.
     getPages() {
         this.setState({pageIsLoading: true});
@@ -872,7 +875,7 @@ class App extends Component {
                                                 menubar: true,
                                                 convert_url: false,
                                                 relative_urls: false,
-                                                remove_script_host : false,
+                                                remove_script_host: false,
                                                 plugins: [
                                                     'advlist autolink lists link image charmap print preview anchor',
                                                     'searchreplace visualblocks code fullscreen',
@@ -1249,42 +1252,53 @@ class App extends Component {
                     </Tab>
                     <Tab eventKey="file"
                          title={<FeatherIcon icon={"file-plus"}/>}>
-                        <br/>
+                        <div>
                         <div className={'post'}>
                             <div className={'post-contents'}>
                                 <Row>
-                                    <br/>
-                                    <Col xs={4}>
-                                    <FileUploadProgress key='ex1' url='/api/uploadFile' method="POST"
-                                                        onProgress={(e, request, progress) => {console.log('progress', e, request, progress);}}
-                                                        onLoad={ (e, request) => {console.log('load', e, request); this.getFiles();}}
-                                                        onError={ (e, request) => {console.log('error', e, request);}}
-                                                        onAbort={ (e, request) => {console.log('abort', e, request);}}
-                                    />
+                                    <Col>
+                                        <Table striped bordered hover>
+                                            <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>File Name</th>
+                                                <th>Path</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {fileTable}
+                                            </tbody>
+                                        </Table>
                                     </Col>
                                 </Row>
-                                <Col>
-                                        <Row>
-                                            <Col>
-                                                <Table striped bordered hover>
-                                                    <thead>
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>File Name</th>
-                                                        <th>Path</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {fileTable}
-                                                    </tbody>
-                                                </Table>
-                                            </Col>
-                                        </Row>
-                                </Col>
+                                <Row>
+                                    <Col style={{position: 'relative'}}>
+                                        <div>
+                                            <h4>Upload file</h4>
+                                            <FileUploadProgress key={uuidv1} url='/api/uploadFile' method="POST"
+                                                                onProgress={(e, request, progress) => {
+                                                                    console.log('progress', e, request, progress);
+                                                                }}
+                                                                onLoad={(e, request) => {
+                                                                    console.log('load', e, request);
+                                                                    this.getFiles();
+                                                                }}
+                                                                onError={(e, request) => {
+                                                                    console.log('error', e, request);
+                                                                }}
+                                                                onAbort={(e, request) => {
+                                                                    console.log('abort', e, request);
+                                                                }}
+                                            />
+                                        </div>
+                                    </Col>
+                                </Row>
                             </div>
+                        </div>
                         </div>
                     </Tab>
                 </Tabs>
+
             </Container>
         )
     }
